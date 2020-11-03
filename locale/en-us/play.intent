@@ -1,3 +1,3 @@
-play ({media} | ) {title}
-play ({media} | ) {title} by {interpreter}
-play ({media} | ) {title} by {interpreter} (on | in) {room}
+play {title}
+play {title} by {interpreter}
+play {title} by {interpreter} (on | in) {room}
