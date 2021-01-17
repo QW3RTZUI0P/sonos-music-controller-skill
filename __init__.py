@@ -1,8 +1,8 @@
 from mycroft import MycroftSkill, intent_handler
-# to transform the json strings returned by the APIs to python dictionaries
-import json
 # to call various search APIs and to communicate to the Sonos Node JS Server
 import requests
+# to get the identifiers for all types of music from the iTunes Search API
+import itunes
 
 class SonosMusicController(MycroftSkill):
 
@@ -26,7 +26,13 @@ class SonosMusicController(MycroftSkill):
         self.add_event("mycroft.audio.service.play", self.resume)
         self.add_event("mycroft.audio.service.playresume", self.resume)
         self.add_event("mycroft.audio.service.resume", self.resume)
+        self.add_event("mycroft.audio.service.next", self.next_song)
+        self.add_event("mycroft.audio.service.prev", self.previous_song)
 
+
+    # general function to call the sonos api
+    def sonos_api(action = ""):
+        requests.get(SonosMusicController.url + str(action))
 
     # General controls for Sonos
     # controlled via the mycroft-playback-control messagebus
@@ -36,6 +42,10 @@ class SonosMusicController(MycroftSkill):
     def resume(self, message):
         self.speak_dialog('resume.dialog')
         requests.get(SonosMusicController.url + "play")
+    def next_song(self, message):
+        requests.get(SonosMusicController.url + "next")
+    def previous_song(self, message):
+        requests.get(SonosMusicController.url + "previous")
         
     @intent_handler('louder.intent')
     def louder(self, message):
@@ -47,11 +57,19 @@ class SonosMusicController(MycroftSkill):
 
 
     # playing music on Sonos
-    @intent_handler('play.intent')
-    def play_music(self, message):
-        trackId = search_song_applemusic(message.data.get('title'), message.data.get('interpreter'))
+    @intent_handler("play.song.intent")
+    def play_song(self, message):
+        trackId = search_song_applemusic(title = message.data.get('title'), interpreter = message.data.get('interpreter'))
         self.log.info(SonosMusicController.url + "applemusic/now/song:" + str(trackId))
         requests.get(SonosMusicController.url + "applemusic/now/song:" + str(trackId))
+
+    @intent_handler("play.album.intent")
+    def play_album(self, message):
+        collectionId = search_album_applemusic(title = message.data.get("title"), interpreter = message.data.get("interpreter"))
+        self.log.info(collectionId)
+        sonos_api("applemusic/now/album:" + str(collectionId))
+        
+
 
 def create_skill():
     return SonosMusicController()
