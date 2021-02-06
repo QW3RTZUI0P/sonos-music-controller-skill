@@ -15,6 +15,8 @@ class SonosMusicController(MycroftSkill):
     radio01 = ""
     # value that stores the volume of the Sonos speaker when Mycroft lowers its volume
     volume = ""
+    # value that stores whether the Sonos speaker is playing
+    is_sonos_playing = False
 
     def __init__(self):
         MycroftSkill.__init__(self)
@@ -62,7 +64,6 @@ class SonosMusicController(MycroftSkill):
 
     # function to output speech over the Sonos speaker using the TTS feature of the node js sonos server
     def output_speech_on_sonos(self, message):
-        self.log.info("Sonos Utterance: " + str(message.data))
         SonosMusicController.sonos_api(action = "say/" + str(message.data.get("utterance")) + "/de-de")
 
 
@@ -71,13 +72,15 @@ class SonosMusicController(MycroftSkill):
     def reduce_volume_of_sonos_speaker(self, message):
         # gets the current volume level of the Sonos speaker and stores it in volume
         state = requests.get(SonosMusicController.url + "state")
-        stateJson = state.json() 
-        SonosMusicController.volume = stateJson['volume']
+        state_json = state.json() 
+        SonosMusicController.volume = state_json['volume']
+        self.log.info("Decreasing volume of Sonos speaker")
         # reduces the volume of the Sonos speaker
         SonosMusicController.sonos_api(action = "volume/5")
 
     def increase_volume_of_sonos_speaker(self, message):
         # increases the volume of the Sonos speaker
+        self.log.info("Increasing volume on Sonos speaker")
         SonosMusicController.sonos_api(action = "volume/" + str(SonosMusicController.volume))
 
 
@@ -101,6 +104,7 @@ class SonosMusicController(MycroftSkill):
     @intent_handler('louder.intent')
     def louder(self, message):
         loudness = int(SonosMusicController.volume) + 10
+        self.log.info(loudness)
         SonosMusicController.sonos_api("volume/" + str(loudness))
 
     @intent_handler('quieter.intent')
@@ -131,12 +135,20 @@ class SonosMusicController(MycroftSkill):
         self.log.info("Playing songs by " + result_dict["interpreter"] + " on " + str(SonosMusicController.room))
         self.speak_dialog("playing.music", {"interpreter": result_dict["interpreter"]}) 
         for current_song in result_dict["song_list"]:
-           if song_list[0] == current_song:
+           if result_dict["song_list"][0] == current_song:
                SonosMusicController.sonos_api(action = "applemusic/now/song:" + str(current_song))
-           elif song_list[30] == current_song:
+           elif result_dict["song_list"][30] == current_song:
                return
            else:
                SonosMusicController.sonos_api(action = "applemusic/queue/song:" + str(current_song))
+            
+           if (result_dict["song_list"][10] == current_song) or (result_dict["song_list"][20] == current_song):
+               state = requests.get(SonosMusicController.url + "state")
+               state_json = state.json() 
+               if str(state_json["playbackState"]) == "STOPPED":
+                   SonosMusicController.sonos_api(action = "play")
+
+               
 
     @intent_handler("play.radio.intent")
     def play_radio(self, message):
