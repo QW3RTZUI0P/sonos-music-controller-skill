@@ -19,5 +19,14 @@ skillMetadata:
           type: text
           label: Room
           value: ""
+    - name: Radio
+      fields:
+        - type: label
+          name: explanation_label_03
+          label: To play radio on Sonos, add a radio sender to your Sonos favorites and rename it to something Mycroft can understand. Then enter here the name of the just created favorite
+        - name: radio
+          type: text
+          label: Radio
+          value: ""
     
 

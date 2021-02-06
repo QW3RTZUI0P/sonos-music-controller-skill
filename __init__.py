@@ -3,16 +3,18 @@ from mycroft import MycroftSkill, intent_handler
 import random
 # to call various search APIs and to communicate to the Sonos Node JS Server
 import requests
-# to get the identifiers for all types of music from the iTunes Search API
-import itunes
 
 class SonosMusicController(MycroftSkill):
 
-    # important values for the skill to function
+    # important values for the skill to function 
     # can be edited in the normal Mycroft Skill settings on home.mycroft.ai
     sonos_server_ip = ""
     room = ""
     url = ""
+    # radio stations. Can be edited on home.mycroft.ai
+    radio01 = ""
+    # value that stores the volume of the Sonos speaker when Mycroft lowers its volume
+    volume = ""
 
     def __init__(self):
         MycroftSkill.__init__(self)
@@ -20,16 +22,22 @@ class SonosMusicController(MycroftSkill):
     def initialize(self):
         SonosMusicController.sonos_server_ip = self.settings.get("sonos_server_ip")
         SonosMusicController.room = self.settings.get("room")
+        SonosMusicController.radio01 = self.settings.get("radio")
         # putting the values in str() is necessary
         SonosMusicController.url = "http://" + str(SonosMusicController.sonos_server_ip) + ":5005/" + str(SonosMusicController.room) + "/" 
 
         # connects with the mycroft-playback-control messagebus
+        self.add_event("recognizer_loop:wakeword", self.activation_confirmation_noise_on_sonos)
+        self.add_event("speak", self.output_speech_on_sonos)
         self.add_event("mycroft.audio.service.pause", self.pause)
         self.add_event("mycroft.audio.service.play", self.resume)
         self.add_event("mycroft.audio.service.playresume", self.resume)
         self.add_event("mycroft.audio.service.resume", self.resume)
         self.add_event("mycroft.audio.service.next", self.next_song)
         self.add_event("mycroft.audio.service.prev", self.previous_song)
+        # sets up the listeners to lower and increase the volume of the Sonos speakers
+        self.add_event("recognizer_loop:wakeword", self.reduce_volume_of_sonos_speaker)
+        self.add_event("recognizer_loop:audio_output_end", self.increase_volume_of_sonos_speaker)
 
 
     # general function to call the sonos api
@@ -44,6 +52,30 @@ class SonosMusicController(MycroftSkill):
     # function to clear the queue
     def clear_queue():
         requests.get(SonosMusicController.url + "clearqueue")
+
+    def activation_confirmation_noise_on_sonos(self, message):
+        SonosMusicController.sonos_api(action = "clip/start_listening.wav/45")
+
+
+    def output_speech_on_sonos(self, message):
+        self.log.info("Sonos Utterance: " + str(message.data))
+        SonosMusicController.sonos_api(action = "say/" + str(message.data.get("utterance")) + "/de-de")
+
+
+
+    # functions to automatically lower the volume of the Sonos speaker and to increase it again when Mycroft has finished speaking
+    def reduce_volume_of_sonos_speaker(self, message):
+        # gets the current volume level of the Sonos speaker and stores it in volume
+        state = requests.get(SonosMusicController.url + "state")
+        stateJson = state.json() 
+        SonosMusicController.volume = stateJson['volume']
+        # reduces the volume of the Sonos speaker
+        SonosMusicController.sonos_api(action = "volume/5")
+
+    def increase_volume_of_sonos_speaker(self, message):
+        # increases the volume of the Sonos speaker
+        SonosMusicController.sonos_api(action = "volume/" + str(SonosMusicController.volume))
+
 
     # General controls for Sonos
     # controlled via the mycroft-playback-control messagebus
@@ -70,9 +102,10 @@ class SonosMusicController(MycroftSkill):
     # playing music on Sonos
     @intent_handler("play.song.intent")
     def play_song(self, message):
-        trackId = search_song_applemusic(title = message.data.get('title'), interpreter = message.data.get('interpreter'))
-        self.log.info(SonosMusicController.url + "applemusic/now/song:" + str(trackId))
-        SonosMusicController.sonos_api_clear_queue(action = "applemusic/now/song:" + str(trackId))
+        result_dict = search_song_applemusic(title = message.data.get('title'), interpreter = message.data.get('interpreter'))
+        self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]))
+        self.speak_dialog("playing.song", {"title": result_dict["trackName"], "interpreter": result_dict["artistName"]})
+        SonosMusicController.sonos_api_clear_queue(action = "applemusic/now/song:" + str(result_dict["trackId"]))
 
     @intent_handler("play.album.intent")
     def play_album(self, message):
@@ -93,6 +126,18 @@ class SonosMusicController(MycroftSkill):
            else:
                SonosMusicController.sonos_api(action = "applemusic/queue/song:" + str(current_song))
 
+    @intent_handler("play.radio.intent")
+    def play_radio(self, message):
+        title = message.data.get("title")
+        radiostation = ""
+        if title == "":
+            radiostation = SonosMusicController.radio01
+        elif SonosMusicController.radio01 in title:
+            radiostation = "favorite/radiogong"
+
+        SonosMusicController.sonos_api_clear_queue(action = radiostation)
+
+
 
 def create_skill():
     return SonosMusicController()
@@ -100,14 +145,15 @@ def create_skill():
 # search algorithms:
 # search functions for Apple Music:
 # function for searching a song on Apple Music
+# returns a dict with the trackId, the trackName and the artistName
 def search_song_applemusic(title="", interpreter=""):
     # this is the url that returns a json file with the search results from the iTunes Search API (https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/)
     urlInFunction = "https://itunes.apple.com/search?term=" + str(title) + "&country=de&media=music&entity=song&attribute=songTerm&artistTerm=" + str(interpreter)
     response = requests.get(urlInFunction)
-    resultsJson = response.json()
-    bestResult = resultsJson["results"][0]
-    trackId = bestResult["trackId"]
-    return trackId
+    results_json = response.json()
+    best_result = results_json["results"][0]
+    result_dict = {"trackId": best_result["trackId"], "trackName": best_result["trackName"], "artistName": best_result["artistName"]}
+    return result_dict
 
 # function for searching an album on Apple Music
 def search_album_applemusic(title="", interpreter=""):
