@@ -1,7 +1,7 @@
 from mycroft import MycroftSkill, intent_handler
 # to shuffle lists
 import random
-# to call various search APIs and to communicate to the Sonos Node JS Server
+# to call various search APIs and to communicate with the Sonos Node JS Server
 import requests
 
 class SonosMusicController(MycroftSkill):
@@ -29,8 +29,6 @@ class SonosMusicController(MycroftSkill):
         SonosMusicController.url = "http://" + str(SonosMusicController.sonos_server_ip) + ":5005/" + str(SonosMusicController.room) + "/" 
 
         # connects with the mycroft-playback-control messagebus
-        self.add_event("recognizer_loop:wakeword", self.activation_confirmation_noise_on_sonos)
-        self.add_event("speak", self.output_speech_on_sonos)
         self.add_event("mycroft.audio.service.pause", self.pause)
         self.add_event("mycroft.audio.service.play", self.resume)
         self.add_event("mycroft.audio.service.playresume", self.resume)
@@ -54,18 +52,6 @@ class SonosMusicController(MycroftSkill):
     # function to clear the queue
     def clear_queue():
         requests.get(SonosMusicController.url + "clearqueue")
-
-    # function to make the activation noise on the Sonos speaker
-    # requires the file start_listening.wav in the folder node-sonos-http-api/static/clips on the machine where the node js server runs
-    # the start_listening.wav file can be found in mycroft-core/mycroft/res/snd/start_listening.wav
-    def activation_confirmation_noise_on_sonos(self, message):
-        SonosMusicController.sonos_api(action = "clip/start_listening.wav/45")
-
-
-    # function to output speech over the Sonos speaker using the TTS feature of the node js sonos server
-    def output_speech_on_sonos(self, message):
-        SonosMusicController.sonos_api(action = "say/" + str(message.data.get("utterance")) + "/de-de")
-
 
 
     # functions to automatically lower the volume of the Sonos speaker and to increase it again when Mycroft has finished speaking

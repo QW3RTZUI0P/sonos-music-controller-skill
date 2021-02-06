@@ -3,7 +3,7 @@ skillMetadata:
   sections:
     - name: Sonos Node Server IP Address
       fields:
-        - name: explanation_label_01
+        - name: sonos_node_server_ip_explanation_label
           type: label
           label: Enter here the (local) IP Address or Hostname of your Sonos Node JS HTTP Server
         - name: sonos_server_ip
@@ -13,7 +13,7 @@ skillMetadata:
     - name: Room
       fields:
         - type: label
-          name: explanation_label_02
+          name: room_explanation_label
           label: Enter here the exact name of the room (the one displayed in the Sonos app) your Mycroft AI Speaker is located in. Type it in with spaces but please watch out with non standard characters like ä, é or ø. Those can be a bit tricky
         - name: room
           type: text
