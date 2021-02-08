@@ -21,3 +21,9 @@ QW3RTZUI0P
 #Sonos
 #Spotify
 #Home
+
+## Credits
+https://mycroft.ai/
+https://github.com/jishi/node-sonos-http-api
+https://github.com/SoCo/SoCo
+https://github.com/techstoa/mycroft-sonos

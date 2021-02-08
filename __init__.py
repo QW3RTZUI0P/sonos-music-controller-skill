@@ -1,8 +1,8 @@
 from mycroft import MycroftSkill, intent_handler
-# to shuffle lists
-import random
-# to call various search APIs and to communicate with the Sonos Node JS Server
-import requests
+# contains all the necessary search algorithms to search for music on the various services
+from .search_algorithms import *
+import time
+
 
 class SonosMusicController(MycroftSkill):
 
@@ -55,37 +55,41 @@ class SonosMusicController(MycroftSkill):
 
 
     # functions to automatically lower the volume of the Sonos speaker and to increase it again when Mycroft has finished speaking
-    def reduce_volume_of_sonos_speaker(self, message):
+    def reduce_volume_of_sonos_speaker(self):
         # gets the current volume level of the Sonos speaker and stores it in volume
         state = requests.get(SonosMusicController.url + "state")
         state_json = state.json() 
-        SonosMusicController.volume = state_json['volume']
-        self.log.info("Decreasing volume of Sonos speaker")
-        # reduces the volume of the Sonos speaker
-        SonosMusicController.sonos_api(action = "volume/5")
+        if state_json["playbackState"] == "PLAYING":
+            SonosMusicController.volume = state_json['volume']
+            self.log.info("Reducing volume of Sonos speaker")
+            # reduces the volume of the Sonos speaker
+            SonosMusicController.sonos_api(action = "volume/5")
+        else:
+            SonosMusicController.volume = "0"
 
-    def increase_volume_of_sonos_speaker(self, message):
-        # increases the volume of the Sonos speaker
-        self.log.info("Increasing volume on Sonos speaker")
-        SonosMusicController.sonos_api(action = "volume/" + str(SonosMusicController.volume))
+    def increase_volume_of_sonos_speaker(self):
+        if SonosMusicController.volume != "0":
+            # increases the volume of the Sonos speaker
+            self.log.info("Increasing volume on Sonos speaker")
+            SonosMusicController.sonos_api(action = "volume/" + str(SonosMusicController.volume))
 
 
     # General controls for Sonos
     # controlled via the mycroft-playback-control messagebus
     def pause(self, message):
         SonosMusicController.sonos_api("pause")
-        SonosMusicController.increase_volume_of_sonos_speaker()
+        SonosMusicController.increase_volume_of_sonos_speaker(self)
     # controlled via the mycroft-playback-control messagebus
     def resume(self, message):
-        self.speak_dialog('resume.dialog')
         SonosMusicController.sonos_api("play")
-        SonosMusicController.increase_volume_of_sonos_speaker()
+        SonosMusicController.increase_volume_of_sonos_speaker(self)
+
     def next_song(self, message):
         SonosMusicController.sonos_api("next")
-        SonosMusicController.increase_volume_of_sonos_speaker()
+        SonosMusicController.increase_volume_of_sonos_speaker(self)
     def previous_song(self, message):
         SonosMusicController.sonos_api("previous")
-        SonosMusicController.increase_volume_of_sonos_speaker()  
+        SonosMusicController.increase_volume_of_sonos_speaker(self)  
         
     @intent_handler('louder.intent')
     def louder(self, message):
@@ -104,16 +108,21 @@ class SonosMusicController(MycroftSkill):
     def play_song(self, message):
         result_dict = search_song_applemusic(title = message.data.get('title'), interpreter = message.data.get('interpreter'))
         self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
-        self.speak_dialog("playing.song", {"title": result_dict["trackName"], "interpreter": result_dict["artistName"]})
         SonosMusicController.sonos_api_clear_queue(action = "applemusic/now/song:" + str(result_dict["trackId"]))
+        self.speak_dialog("playing.song", {"title": result_dict["trackName"], "interpreter": result_dict["artistName"]})
+        time.sleep(8)
+        SonosMusicController.sonos_api(action = "play")
+
 
     @intent_handler("play.album.intent")
     def play_album(self, message):
         result_dict = search_album_applemusic(title = message.data.get("title"), interpreter = message.data.get("interpreter"))
         self.log.info("Playing the album " + str(results_dict["collectionName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
-        self.speak_dialog("playing.album", {"title": result_dict["collectionName"], "interpreter": result_dict["artistName"]})
         SonosMusicController.sonos_api_clear_queue(action = "applemusic/now/album:" + str(result_dict["collectionId"]))
-
+        self.speak_dialog("playing.album", {"title": result_dict["collectionName"], "interpreter": result_dict["artistName"]})
+        time.sleep(8)
+        SonosMusicController.sonos_api(action = "play")
+        
     @intent_handler("play.music.intent")
     def play_music(self, message):
         SonosMusicController.clear_queue()
@@ -152,77 +161,4 @@ class SonosMusicController(MycroftSkill):
 
 def create_skill():
     return SonosMusicController()
-
-# search algorithms:
-# search functions for Apple Music:
-# function for searching a song on Apple Music
-# returns a dict with the trackId, the trackName and the artistName
-def search_song_applemusic(title="", interpreter=""):
-    # this is the url that returns a json file with the search results from the iTunes Search API (https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/)
-    urlInFunction = "https://itunes.apple.com/search?term=" + str(title) + "&country=de&media=music&entity=song&attribute=songTerm&artistTerm=" + str(interpreter)
-    response = requests.get(urlInFunction)
-    results_json = response.json()
-    best_result = results_json["results"][0]
-    result_dict = {"trackId": best_result["trackId"], "trackName": best_result["trackName"], "artistName": best_result["artistName"]}
-    return result_dict
-
-# function for searching an album on Apple Music
-def search_album_applemusic(title="", interpreter=""):
-    urlInFunction = "https://itunes.apple.com/search?term=" + str(title) + "&country=de&media=music&entity=album&attribute=albumTerm&artistTerm=" + str(interpreter)
-    response = requests.get(urlInFunction)
-    results_json = response.json()
-    best_result = results_json["results"][0]
-    result_dict = {"collectionId": best_result["collectionId"], "collectionName": best_result["collectionName"], "artistName": best_result["artistName"]}
-    return result_dict
-
-# function to search for songs of the specified interpreter on Apple Music
-def search_songs_of_artist_applemusic(interpreter = ""):
-    urlInFunction = "https://itunes.apple.com/search?term=" + str(interpreter) + " song&country=de&media=music&entity=song&limit=75&artistTerm=" + str(interpreter)
-    response = requests.get(urlInFunction)
-    results_json = response.json()
-    song_list = []
-    for current_entry in results_json["results"]:
-        if "trackId" in current_entry:
-            song_list.append(str(current_entry["trackId"]))
-
-    random.shuffle(song_list)
-    # value to check the given interpreter, sometimes it doesn't play songs from the specified interpreter
-    # because the stt engine didn't understand the word
-    real_interpreter = results_json["results"][0]["artistName"]
-    result_dict = {"song_list": song_list, "interpreter": str(real_interpreter)}
-    return result_dict
-
-
-# function to search for albums of the specified interpreter on Apple Music
-# currently not in use
-def search_albums_of_artist_applemusic(interpreter = ""):
-    urlInFunction = "https://itunes.apple.com/search?term=" + str(interpreter) + " album&country=de&media=music&entity=album&artistTerm=" + str(interpreter)
-    response = requests.get(urlInFunction)
-    resultsJson = response.json()
-    wrong_album_list = resultsJson["results"]
-    right_album_list = validate_entries_for(array = wrong_album_list, key = "artistName", value = str(interpreter))
-    return right_album_list
-
-# function for searching a playlist on Apple Music
-# this is currently not working because the iTunes Search API doesn't support searching for playlists
-def search_playlist_applemusic(title="", interpreter=""):
-    return
-
-# function for search the Essentials playlist of an artist on Apple Music
-# this is currently not working because the iTunes Search API doesn't support searching for playlists
-
-
-def search_essentials_applemusic(interpreter=""):
-    return
-
-
-# function that returns all dictionary items of the given array which have the given value as the value for the given key
-def validate_entries_for(array = [], key = "", value = ""):
-    results_list = []
-    for entry in array:
-        if key in entry:
-            if entry[key].lower() == value:
-                results_list.append(entry)
-
-    return results_list
 
