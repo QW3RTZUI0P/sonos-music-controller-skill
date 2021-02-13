@@ -55,7 +55,6 @@ class SonosMusicController(MycroftSkill):
             if current_speaker.player_name == SonosMusicController.room:
                 SonosMusicController.speaker = current_speaker
 
-        break
 
     # general function to call the sonos api
     def sonos_api(action=""):
