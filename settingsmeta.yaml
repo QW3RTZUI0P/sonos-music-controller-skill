@@ -10,15 +10,6 @@ skillMetadata:
           type: text
           label: IP Address or Hostname
           value: ""
-    - name: Room
-      fields:
-        - type: label
-          name: room_explanation_label
-          label: Enter here the exact name of the room (the one displayed in the Sonos app) your Mycroft AI Speaker is located in. Type it in with spaces but please watch out with non standard characters like ä, é or ø. Those can be a bit tricky
-        - name: room
-          type: text
-          label: Room
-          value: ""
     - name: Radio
       fields:
         - type: label
