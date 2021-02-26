@@ -134,14 +134,16 @@ class SonosMusicController(MycroftSkill):
     @intent_handler('louder.intent')
     def louder(self, message):
         old_volume = SonosMusicController.volume
-        new_volume = old_volume + 10
-        SonosMusicController.speaker.volume = new_volume
+        new_volume = int(old_volume) + 10
+        #TODO: implement error handling: what will happen if volume is above 100?
+        SonosMusicController.speaker.volume = str(new_volume)
 
     @intent_handler('quieter.intent')
     def quieter(self, message):
         old_volume = SonosMusicController.volume
-        new_volume = old_volume - 10
-        SonosMusicController.speaker.volume = new_volume
+        new_volume = int(old_volume) - 10
+        #TODO: implement error handling: what will happen if volume is below zero?
+        SonosMusicController.speaker.volume = str(new_volume)
 
 
     # takes the given identifier and converts it to an uri (currently only Apple Music)
@@ -167,11 +169,11 @@ class SonosMusicController(MycroftSkill):
     @intent_handler("play.album.intent")
     def play_album(self, message):
         result_dict = search_album_applemusic(title=message.data.get("title"), interpreter=message.data.get("interpreter"))
-        self.log.info("Playing the album " + str(results_dict["collectionName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
+        self.log.info("Playing the album " + str(result_dict["collectionName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
         self.speak_dialog("playing.album", {"title": result_dict["collectionName"], "interpreter": result_dict["artistName"]})
         SonosMusicController.speaker.clear_queue()
         final_uris_list = []
-        for current_id in result_dict:
+        for current_id in result_dict["songIds"]:
             final_uris_list.append(SonosMusicController.convert_to_uri(current_id))
         SonosMusicController.play_uris(final_uris_list)
                 
@@ -199,6 +201,8 @@ class SonosMusicController(MycroftSkill):
     @intent_handler("play.radio.intent")
     def play_radio(self, message):
         title = message.data.get("title")
+        if title == None:
+            title = ""
         radiostation = ""
         self.speak_dialog("playing.radio", {"radio": str(title)})
         if title == "":

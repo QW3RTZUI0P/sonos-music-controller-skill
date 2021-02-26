@@ -17,20 +17,20 @@ def search_song_applemusic(title="", interpreter="", country_code = "us"):
     return result_dict
 
 # function for searching an album on Apple Music
-# returns a dict with the collectionId, the collectionName and the artistName
+# returns a dict with the songIds of the tracks in the album, the collectionName and the artistName
 def search_album_applemusic(title="", interpreter="", country_code = "us"):
-    url_album = "https://itunes.apple.com/search?term=" + str(title) + str(interpreter) + "&media=music&entity=album&albumTerm=" + str(title) + "&artistTerm=" + str(interpreter) + "&country=" + str(country_code)
-    url_songs = "https://itunes.apple.com/search?term=" + str(title) + str(interpreter) + "&media=music&entity=song&albumTerm=" + str(title) + "&artistTerm=" + str(interpreter) + "&country=" + str(country_code)
+    url_album = "https://itunes.apple.com/search?term=" + str(title) + " " + str(interpreter) + "&media=music&entity=album&albumTerm=" + str(title) + "&artistTerm=" + str(interpreter) + "&country=" + str(country_code)
+    url_songs = "https://itunes.apple.com/search?term=" + str(title) + " " + str(interpreter) + "&media=music&entity=song&albumTerm=" + str(title) + "&artistTerm=" + str(interpreter) + "&country=" + str(country_code)
     response_album = requests.get(url_album)
     response_songs = requests.get(url_songs)
     results_album = response_album.json()
     results_songs = response_songs.json()
-    best_album_result = results_album["results"][0]
+    best_album_result = results_album.get("results")[0]
     final_song_id_list = []
     for index in range(0, best_album_result["trackCount"]):
         current_id = results_songs["results"][index]["trackId"]
         final_song_id_list.append(current_id)
-    result_dict = {"songIds": final_song_id_list, "collectionName": best_result["collectionName"], "artistName": best_result["artistName"]}
+    result_dict = {"songIds": final_song_id_list, "collectionName": best_album_result["collectionName"], "artistName": best_album_result["artistName"]}
     return result_dict
 
 # function to search for songs of the specified interpreter on Apple Music

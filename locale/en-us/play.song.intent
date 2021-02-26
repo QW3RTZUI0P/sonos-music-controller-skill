@@ -1,0 +1,3 @@
+play ( | the song | the track) {title}
+play the ( | the song | the track) {title} by {interpreter}
+play the ( | the song | the track) {title} by {interpreter} (on | in) {room}
