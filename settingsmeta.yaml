@@ -1,19 +1,17 @@
 
 skillMetadata:
   sections:
-    - name: Sonos Node Server IP Address
+    - name: Services
       fields:
-        - name: sonos_node_server_ip_explanation_label
-          type: label
-          label: Enter here the (local) IP Address or Hostname of your Sonos Node JS HTTP Server
-        - name: sonos_server_ip
-          type: text
-          label: IP Address or Hostname
-          value: ""
+        - name: service_selection
+          type: select
+          label: Select your music service
+          options: Spotify (NOT WORKING)|spotify;Apple Music|apple_music
+          value: spotify
+
     - name: Radio
       fields:
         - type: label
-          name: explanation_label_03
           label: To play radio on Sonos, add a radio sender to your Sonos favorites and rename it to something Mycroft can understand. Then enter here the name of the just created favorite
         - name: radio
           type: text

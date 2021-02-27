@@ -14,10 +14,8 @@ from .static_values import *
 class SonosMusicController(MycroftSkill):
 
     # important values for the skill to function
-    # can be edited in the normal Mycroft Skill settings on home.mycroft.ai
-    sonos_server_ip = ""
+    # location information
     room = ""
-    url = ""
     country_code = ""
     # radio stations. Can be edited on home.mycroft.ai
     radio01 = ""
@@ -25,6 +23,9 @@ class SonosMusicController(MycroftSkill):
     volume = "0"
     # value that stores whether the Sonos speaker is playing
     is_sonos_playing = False
+
+    # the music service chosen by the user
+    music_service = ""
 
     # values for the soco package
     all_speakers = []
@@ -34,14 +35,10 @@ class SonosMusicController(MycroftSkill):
         MycroftSkill.__init__(self)
 
     def initialize(self):
-        SonosMusicController.sonos_server_ip = self.settings.get(
-            "sonos_server_ip")
+        # get the skill settings
         SonosMusicController.room = str(DeviceApi().get()["description"])
         SonosMusicController.radio01 = self.settings.get("radio")
-        # putting the values in str() is necessary
-        SonosMusicController.url = "http://" + \
-            str(SonosMusicController.sonos_server_ip) + \
-            ":5005/" + str(SonosMusicController.room) + "/"
+        SonosMusicController.music_service = self.settings.get("service_selection")
 
         SonosMusicController.country_code = str(DeviceApi().get_location()["city"]["state"]["country"]["code"]).lower()
 
@@ -68,19 +65,11 @@ class SonosMusicController(MycroftSkill):
                 SonosMusicController.speaker = current_speaker
 
 
-    # general function to call the sonos api
-    def sonos_api(action=""):
-        requests.get(SonosMusicController.url + str(action))
-
-    # function to call the sonos api and to clear the queue
-    def sonos_api_clear_queue(action=""):
-        requests.get(SonosMusicController.url + "clearqueue")
-        requests.get(SonosMusicController.url + str(action))
-
+    
+    
     # function to clear the queue
     def clear_queue():
         SonosMusicController.speaker.clear_queue()
-        # requests.get(SonosMusicController.url + "clearqueue")
 
     # plays the given uris (most of the time a fancy string that contains some important information)
     # the first uri in the list will be played immediately, all the other ones are being added to the queue
