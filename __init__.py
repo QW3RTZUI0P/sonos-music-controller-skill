@@ -25,11 +25,15 @@ class SonosMusicController(MycroftSkill):
     is_sonos_playing = False
 
     # the music service chosen by the user
+    # possible values: "spotify" or "apple_music"
     music_service = ""
 
     # values for the soco package
     all_speakers = []
     speaker = None
+
+    # values for Spotify
+    spotify_sn = ""
 
     def __init__(self):
         MycroftSkill.__init__(self)
@@ -45,6 +49,12 @@ class SonosMusicController(MycroftSkill):
         # initializes soco
         SonosMusicController.initialize_soco()
 
+        # initialize music services
+        if SonosMusicController.music_service == "spotify":
+            SonosMusicController.initialize_spotify()
+        elif SonosMusicController.music_service == "apple_music":
+            pass
+
         # connects with the mycroft-playback-control messagebus
         self.add_event("mycroft.audio.service.pause", self.pause)
         self.add_event("mycroft.audio.service.play", self.resume)
@@ -58,13 +68,28 @@ class SonosMusicController(MycroftSkill):
         self.add_event("recognizer_loop:audio_output_end",
                        self.increase_volume_of_sonos_speaker)
 
+    # initialisation methods:
     def initialize_soco():
         SonosMusicController.all_speakers = soco.discover()
         for current_speaker in SonosMusicController.all_speakers:
             if current_speaker.player_name == SonosMusicController.room:
                 SonosMusicController.speaker = current_speaker
 
+    def initialize_spotify():
+        # TODO: add mechanism to get the Spotify sid and sn values
+        pass
 
+    # takes the given identifier and converts it to an uri (currently only Apple Music and Spotify)
+    # TODO: check if Spotify uris are right and functional
+    def convert_to_uri(identifier = ""):
+        service = SonosMusicController.music_service
+        if service == "spotify":
+            # TODO: is it important which values sid, flags and sn have??
+            uri = "x-sonos-spotify:spotify:track:" + str(identifier) + "?sid=9&flags=0&sn=19"
+            return uri
+        elif service == "apple_music":
+            uri = "x-sonos-http:song%3a" + str(identifier) + ".mp4?sid=" + applemusic_service_id + "&flags=" + applemusic_flags + "&sn=" + applemusic_sn
+            return uri
     
     
     # function to clear the queue
@@ -135,10 +160,7 @@ class SonosMusicController(MycroftSkill):
         SonosMusicController.speaker.volume = str(new_volume)
 
 
-    # takes the given identifier and converts it to an uri (currently only Apple Music)
-    def convert_to_uri(identifier = ""):
-        uri = "x-sonos-http:song%3a" + str(identifier) + ".mp4?sid=" + applemusic_service_id + "&flags=" + applemusic_flags + "&sn=" + applemusic_sn
-        return uri
+    
         
 
     # playing music on Sonos
@@ -146,7 +168,7 @@ class SonosMusicController(MycroftSkill):
     # plays a song on the Sonos speaker located in the room where Mycroft is placed
     @intent_handler("play.song.intent")
     def play_song(self, message):
-        result_dict = search_song_applemusic(title=message.data.get('title'), interpreter=message.data.get('interpreter'), country_code = SonosMusicController.country_code)
+        result_dict = search_song(title=message.data.get('title'), interpreter=message.data.get('interpreter'), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
         uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
         SonosMusicController.speaker.clear_queue()
         SonosMusicController.speaker.play_uri(uri)
@@ -157,7 +179,7 @@ class SonosMusicController(MycroftSkill):
     # plays an album on the Sonos speaker located in the room where Mycroft is placed
     @intent_handler("play.album.intent")
     def play_album(self, message):
-        result_dict = search_album_applemusic(title=message.data.get("title"), interpreter=message.data.get("interpreter"))
+        result_dict = search_album(title=message.data.get("title"), interpreter=message.data.get("interpreter"), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
         self.log.info("Playing the album " + str(result_dict["collectionName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
         self.speak_dialog("playing.album", {"title": result_dict["collectionName"], "interpreter": result_dict["artistName"]})
         SonosMusicController.speaker.clear_queue()

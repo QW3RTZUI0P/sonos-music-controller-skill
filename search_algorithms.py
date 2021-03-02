@@ -4,6 +4,19 @@ import requests
 # used to shuffle lists
 import random
 
+# General functions
+def search_song(title = "", interpreter = "", country_code = "", service = ""):
+    if service == "spotify":
+        return search_song_spotify(title = title, interpreter = interpreter, country_code = country_code)
+    elif service == "apple_music":
+        return search_song_applemusic(title = title, interpreter = interpreter, country_code = country_code)
+
+def search_album(title = "", interpreter = "", country_code = "", service = ""):
+    if service == "spotify":
+        pass
+    if service == "apple_music":
+        return search_album_applemusic(title = title, interpreter = interpreter, country_code = country_code)
+
 # Apple Music:
 # function for searching a song on Apple Music
 # returns a dict with the trackId, the trackName and the artistName
@@ -85,4 +98,15 @@ def validate_entries_for(array = [], key = "", value = ""):
 
     return results_list
 
-
+# Spotify:
+# returns a dict with the trackId, the trackName and the artistName
+def search_song_spotify(title = "", interpreter = "", country_code = ""):
+    url = "https://api.spotify.com/v1/search?q=" + str(title) + " " + str(interpreter) + "&type=track&limit=5"
+    token = requests.get("https://raw.githubusercontent.com/jumelon/public_spotify_access_token/master/token").text
+    headers = {"Authorization": "Bearer " + token}
+    response = requests.get(url, headers = headers)
+    json = response.json()
+    best_result = json["tracks"]["items"][0]
+    trackId = json["tracks"]["items"][0]["uri"].split(":")[2]
+    result_dict = {"trackId": trackId, "trackName": best_result["name"], "artistName": json["tracks"]["items"][0]["artists"][0]["name"]}
+    return result_dict
