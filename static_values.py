@@ -7,3 +7,6 @@ applemusic_service_id = "204"
 applemusic_flags = "8224"
 applemusic_sn = "13"
 
+# Spotify token url
+spotify_token_url = "https://jumelon.github.io/public_spotify_access_token/token"
+

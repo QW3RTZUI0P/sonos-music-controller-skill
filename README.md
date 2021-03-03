@@ -3,6 +3,7 @@ A Mycroft skill to control the music on your Sonos speakers
 
 ## About
 This skill uses the SoCo python package to control the Sonos speakers. To play music from different services, it uses the service APIs ([iTunes Search API](https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/) and [Spotify API](https://developer.spotify.com/documentation/web-api/)), searchs with them for music, takes the ID and converts this ID to an URI the Sonos speakers can understand. I found this URIs with jishis repo https://github.com/jishi/node-sonos-http-api so without it I couldn't have done this.
+It also supports auto-controlling the volume of the Sonos speaker in the room the Mycroft device is placed in. When Mycroft starts recording the volume is decreased and when Mycroft has finished speaking the volume is increased to its original level.
 
 ## Installation
 Just install this skill using mycroft-msm. No further authentication required!

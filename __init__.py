@@ -191,14 +191,14 @@ class SonosMusicController(MycroftSkill):
 
     @intent_handler("play.music.intent")
     def play_music(self, message):
-        result_dict = search_songs_of_artist_applemusic(interpreter=message.data.get("interpreter"))
+        result_dict = search_songs_of_artist(interpreter=message.data.get("interpreter"), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
         self.log.info("Playing songs by " + result_dict["interpreter"] + " on " + str(SonosMusicController.room))
         self.speak_dialog("playing.music", {"interpreter": result_dict["interpreter"]})
         SonosMusicController.speaker.clear_queue()
         final_uris_list = []
         for current_song in result_dict["song_list"]:
             final_uris_list.append(SonosMusicController.convert_to_uri(current_song))
-            if result_dict["song_list"][30] == current_song:
+            if result_dict["song_list"][-1] == current_song:
                 SonosMusicController.play_uris(final_uris_list)
                 return
 
