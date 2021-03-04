@@ -6,8 +6,8 @@ skillMetadata:
         - name: service_selection
           type: select
           label: Select your music service
-          options: Spotify (NOT WORKING)|spotify;Apple Music|apple_music
-          value: spotify
+          options: Spotify|spotify;Apple Music|apple_music
+          value: 
 
     - name: Radio
       fields:
