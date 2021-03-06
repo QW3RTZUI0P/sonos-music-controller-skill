@@ -20,6 +20,7 @@ Just install this skill using mycroft-msm. No further authentication required!
 mycroft-msm install https://github.com/QW3RTZUI0P/sonos-music-controller-skill
 ```
 The skill takes the speaker with the name you specified in the "placement" variable in the device settings on home.mycroft.ai, so please be sure that this value is exactly like the name of your Sonos speaker. Also, to play music from a service you have to be authenticated for it (through the Sonos app).
+To start using music services, please configure your preferred one in the Mycroft settings on home.mycroft.ai.
 
 
 ## Examples
