@@ -65,7 +65,7 @@ def search_songs_of_artist_applemusic(interpreter = "", country_code = "us"):
         if "trackId" in current_entry:
             song_id_list.append(str(current_entry.get("trackId")))
 
-    random.shuffle(song_list)
+    random.shuffle(song_id_list)
     # value to check the given interpreter, sometimes it doesn't play songs from the specified interpreter
     # because the stt engine didn't understand the word
     real_interpreter = results_json.get("results")[0].get("artistName")
@@ -108,10 +108,24 @@ def validate_entries_for(array = [], key = "", value = ""):
 
 
 # Spotify:
+# returns the public Spotify access token currently available on open.spotify.com via web scraping
+# this is a very unstable and ugly piece of code, but for now it'll do
+def get_spotify_access_token():
+    url = "https://open.spotify.com/"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"}
+    response = requests.get(url, headers=headers)
+    # finds the location where the accessToken is
+    index = response.text.find('"accessToken')
+    liste = response.text[index:index+300]
+    part01 = liste.split('":"')[1]
+    # gets the access token
+    token = part01.split('","')[0]
+    return token
+
 # returns a dict with the trackId, the trackName and the artistName
 def search_song_spotify(title = "", interpreter = "", country_code = ""):
     url = "https://api.spotify.com/v1/search?q=" + str(title) + " " + str(interpreter) + "&type=track&limit=5"
-    token = requests.get(spotify_token_url).text
+    token = get_spotify_access_token()
     headers = {"Authorization": "Bearer " + token}
     response = requests.get(url, headers = headers)
     json = response.json()
@@ -122,9 +136,10 @@ def search_song_spotify(title = "", interpreter = "", country_code = ""):
 
 # returns a dict with the songIds of the tracks in the album, the collectionName and the artistName
 def search_album_spotify(title = "", interpreter = "", country_code = ""):
-    token = requests.get(spotify_token_url).text
-    headers = {"Authorization": "Bearer " + token}
     url  = "https://api.spotify.com/v1/search?q=" + str(title) + " " + str(interpreter) + "&type=track"
+    token = get_spotify_access_token()
+    headers = {"Authorization": "Bearer " + token}
+
     response = requests.get(url, headers = headers)
     json = response.json()
     results = json.get("tracks").get("items")
@@ -140,9 +155,9 @@ def search_album_spotify(title = "", interpreter = "", country_code = ""):
 
 # returns a dict with the list of songIds and the artistName
 def search_songs_of_artist_spotify(interpreter = "", country_code = ""):
-    token = requests.get(spotify_token_url).text
-    headers = {"Authorization": "Bearer " + token}
     url = "https://api.spotify.com/v1/search?q=" + str(interpreter) + "&type=track&limit=30"
+    token = get_spotify_access_token()
+    headers = {"Authorization": "Bearer " + token}
     response = requests.get(url, headers = headers)
     json = response.json()
     results = json.get("tracks").get("items")

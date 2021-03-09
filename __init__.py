@@ -67,6 +67,8 @@ class SonosMusicController(MycroftSkill):
                        self.reduce_volume_of_sonos_speaker)
         self.add_event("recognizer_loop:audio_output_end",
                        self.increase_volume_of_sonos_speaker)
+        if SonosMusicController.music_service == "":
+            self.speak_dialog("no.service.chosen.error")
 
     # initialisation methods:
     def initialize_soco():
