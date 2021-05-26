@@ -49,11 +49,7 @@ class SonosMusicController(MycroftSkill):
         # initializes soco
         SonosMusicController.initialize_soco()
 
-        # initialize music services
-        if SonosMusicController.music_service == "spotify":
-            SonosMusicController.initialize_spotify()
-        elif SonosMusicController.music_service == "apple_music":
-            pass
+        SonosMusicController.initialize_music_services()
 
         # connects with the mycroft-playback-control messagebus
         self.add_event("mycroft.audio.service.pause", self.pause)
@@ -76,6 +72,14 @@ class SonosMusicController(MycroftSkill):
         for current_speaker in SonosMusicController.all_speakers:
             if current_speaker.player_name == SonosMusicController.room:
                 SonosMusicController.speaker = current_speaker
+    
+    def initialize_music_services():
+        if SonosMusicController.music_service == None or SonosMusicController.music_service == "":
+            self.speak_dialog("no.music.service.chosen")
+        elif SonosMusicController.music_service == "spotify":
+            SonosMusicController.initialize_spotify()
+        elif SonosMusicController.music_service == "apple_music":
+            pass
 
     def initialize_spotify():
         # TODO: add mechanism to get the Spotify sid and sn values
@@ -170,39 +174,59 @@ class SonosMusicController(MycroftSkill):
     # plays a song on the Sonos speaker located in the room where Mycroft is placed
     @intent_handler("play.song.intent")
     def play_song(self, message):
-        result_dict = search_song(title=message.data.get('title'), interpreter=message.data.get('interpreter'), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
-        uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
-        SonosMusicController.speaker.clear_queue()
-        SonosMusicController.speaker.play_uri(uri)
-        self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
-        self.speak_dialog("playing.song", {"title": result_dict["trackName"], "interpreter": result_dict["artistName"]})
+        try:
+            result_dict = search_song(title=message.data.get('title'), interpreter=message.data.get('interpreter'), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service, instance = self)
+            uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
+            SonosMusicController.speaker.clear_queue()
+            SonosMusicController.speaker.play_uri(uri)
+            self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
+            self.speak_dialog("playing.song", {"title": result_dict["trackName"], "interpreter": result_dict["artistName"]})
+            self.log.info(result_dict["url"])
+        except IndexError:
+            interpreter = message.data.get("interpreter")
+            if interpreter == None: 
+                self.speak_dialog("no.song.found", {"title": message.data.get('title')})
+            else: 
+                self.speak_dialog("no.song.found.with.interpreter", {"title": message.data.get('title'), "interpreter": interpreter})
+        
         
 
     # plays an album on the Sonos speaker located in the room where Mycroft is placed
     @intent_handler("play.album.intent")
     def play_album(self, message):
-        result_dict = search_album(title=message.data.get("title"), interpreter=message.data.get("interpreter"), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
-        self.log.info("Playing the album " + str(result_dict["collectionName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
-        self.speak_dialog("playing.album", {"title": result_dict["collectionName"], "interpreter": result_dict["artistName"]})
-        SonosMusicController.speaker.clear_queue()
-        final_uris_list = []
-        for current_id in result_dict["songIds"]:
-            final_uris_list.append(SonosMusicController.convert_to_uri(current_id))
-        SonosMusicController.play_uris(final_uris_list)
+        try:
+            result_dict = search_album(title=message.data.get("title"), interpreter=message.data.get("interpreter"), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
+            self.log.info("Playing the album " + str(result_dict["collectionName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
+            self.speak_dialog("playing.album", {"title": result_dict["collectionName"], "interpreter": result_dict["artistName"]})
+            SonosMusicController.speaker.clear_queue()
+            final_uris_list = []
+            for current_id in result_dict["songIds"]:
+                final_uris_list.append(SonosMusicController.convert_to_uri(current_id))
+            SonosMusicController.play_uris(final_uris_list)
+        except IndexError:
+            interpreter = message.data.get("interpreter")
+            if interpreter == None: 
+                self.speak_dialog("no.album.found", {"title": message.data.get('title')})
+            else: 
+                self.speak_dialog("no.album.found.with.interpreter", {"title": message.data.get('title'), "interpreter": interpreter})
+            
                 
 
     @intent_handler("play.music.intent")
     def play_music(self, message):
-        result_dict = search_songs_of_artist(interpreter=message.data.get("interpreter"), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
-        self.log.info("Playing songs by " + result_dict["interpreter"] + " on " + str(SonosMusicController.room))
-        self.speak_dialog("playing.music", {"interpreter": result_dict["interpreter"]})
-        SonosMusicController.speaker.clear_queue()
-        final_uris_list = []
-        for current_song in result_dict["song_list"]:
-            final_uris_list.append(SonosMusicController.convert_to_uri(current_song))
-            if result_dict["song_list"][-1] == current_song:
-                SonosMusicController.play_uris(final_uris_list)
-                return
+        try:
+            result_dict = search_songs_of_artist(interpreter=message.data.get("interpreter"), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
+            self.log.info("Playing songs by " + result_dict["interpreter"] + " on " + str(SonosMusicController.room))
+            self.speak_dialog("playing.music", {"interpreter": result_dict["interpreter"]})
+            SonosMusicController.speaker.clear_queue()
+            final_uris_list = []
+            for current_song in result_dict["song_list"]:
+                final_uris_list.append(SonosMusicController.convert_to_uri(current_song))
+                if result_dict["song_list"][-1] == current_song:
+                    SonosMusicController.play_uris(final_uris_list)
+                    return
+        except IndexError:
+           self.speak_dialog("no.music.found", {"interpreter": message.data.get("interpreter")})
 
             # just used for debugging
             # if (result_dict["song_list"][10] == current_song) or (result_dict["song_list"][20] == current_song):
