@@ -56,7 +56,7 @@ Please feel free to open an issue or create a PR at any time. Help and/or feedba
 #Home
 
 ## Credits
-QW3RTZUI0P
+QW3RTZUI0P 
 Huge Credits to: 
 * https://github.com/jishi/node-sonos-http-api
 * https://github.com/SoCo/SoCo
