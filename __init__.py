@@ -107,10 +107,12 @@ class SonosMusicController(MycroftSkill):
     # uris can either be urls or Sonos intern uris, e.g. x-sonos-http:SOME_ID&SOME_SERVICE_ID&SOME_OTHER_ID
     def play_uris(uri_list = []):
         for current_uri in uri_list:
-            if uri_list[0] == current_uri:
-                SonosMusicController.speaker.play_uri(current_uri)
-            else:
-                SonosMusicController.speaker.add_uri_to_queue(current_uri)
+            #if uri_list[0] == current_uri:
+            #    SonosMusicController.speaker.play_uri(current_uri)
+            #else:
+            SonosMusicController.speaker.add_uri_to_queue(current_uri)
+        SonosMusicController.speaker.next()
+        SonosMusicController.speaker.play()
 
 
     # functions to automatically lower the volume of the Sonos speaker and to increase it again when Mycroft has finished speaking
