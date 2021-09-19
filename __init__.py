@@ -3,6 +3,7 @@ from mycroft import MycroftSkill, intent_handler
 from mycroft.api import DeviceApi
 # used to control the Sonos speakers
 import soco
+from soco.data_structures import *
 # used to make breaks in the code
 import time
 # contains all the necessary search algorithms to search for music on the various services
@@ -107,14 +108,19 @@ class SonosMusicController(MycroftSkill):
     # uris can either be urls or Sonos intern uris, e.g. x-sonos-http:SOME_ID&SOME_SERVICE_ID&SOME_OTHER_ID
     def play_uris(uri_list = []):
         for current_uri in uri_list:
-            #if uri_list[0] == current_uri:
-            #    SonosMusicController.speaker.play_uri(current_uri)
+            resources = [DidlResource(uri=current_uri, protocol_info="x-rincon-playlist:*:*:*")]
+            item = DidlObject(resources=resources, title="snons", parent_id="", item_id="")
+            SonosMusicController.speaker.add_to_queue(item)
+            if uri_list[0] == current_uri:
+                time.sleep(1)
+                SonosMusicController.speaker.play()
             #else:
-            SonosMusicController.speaker.add_uri_to_queue(current_uri)
-        time.sleep(2)
-        SonosMusicController.speaker.play()
-        time.sleep(5)
-        SonosMusicController.speaker.next()
+            #    time.sleep(1)
+            #    SonosMusicController.speaker.add_uri_to_queue(current_uri)
+        #time.sleep(2)
+        #SonosMusicController.speaker.play()
+        #time.sleep(5)
+        #SonosMusicController.speaker.next()
 
 
     # functions to automatically lower the volume of the Sonos speaker and to increase it again when Mycroft has finished speaking
