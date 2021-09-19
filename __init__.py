@@ -111,8 +111,10 @@ class SonosMusicController(MycroftSkill):
             #    SonosMusicController.speaker.play_uri(current_uri)
             #else:
             SonosMusicController.speaker.add_uri_to_queue(current_uri)
-        SonosMusicController.speaker.next()
+        time.sleep(2)
         SonosMusicController.speaker.play()
+        time.sleep(5)
+        SonosMusicController.speaker.next()
 
 
     # functions to automatically lower the volume of the Sonos speaker and to increase it again when Mycroft has finished speaking
