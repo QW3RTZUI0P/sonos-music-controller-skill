@@ -6,6 +6,9 @@ import soco
 from soco.data_structures import *
 # used to make breaks in the code
 import time
+
+import random
+
 # contains all the necessary search algorithms to search for music on the various services
 from .search_algorithms import *
 # contains important (static) values for the music services
@@ -97,9 +100,15 @@ class SonosMusicController(MycroftSkill):
         elif service == "apple_music":
             uri = "x-sonos-http:song%3a" + str(identifier) + ".mp4?sid=" + applemusic_service_id + "&flags=" + applemusic_flags + "&sn=" + applemusic_sn
             return uri
+
+    # converts the given uri to a didl item that can be handled way better by soco (e.g. song can be skipped)
+    def convert_to_didl_item(uri = "", title = ""):
+        resources = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
+        item = DidlObject(resources=resources, title=title, parent_id="", item_id="")
+        return item
     
     
-    # function to clear the queue
+    # function to clear the sonos queue
     def clear_queue():
         SonosMusicController.speaker.clear_queue()
 
@@ -108,8 +117,7 @@ class SonosMusicController(MycroftSkill):
     # uris can either be urls or Sonos intern uris, e.g. x-sonos-http:SOME_ID&SOME_SERVICE_ID&SOME_OTHER_ID
     def play_uris(uri_list = []):
         for current_uri in uri_list:
-            resources = [DidlResource(uri=current_uri, protocol_info="x-rincon-playlist:*:*:*")]
-            item = DidlObject(resources=resources, title="snons", parent_id="", item_id="")
+            item = SonosMusicController.convert_to_didl_item(current_uri)
             SonosMusicController.speaker.add_to_queue(item)
             if uri_list[0] == current_uri:
                 time.sleep(1)
@@ -186,12 +194,16 @@ class SonosMusicController(MycroftSkill):
     def play_song(self, message):
         try:
             result_dict = search_song(title=message.data.get('title'), interpreter=message.data.get('interpreter'), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service, instance = self)
-            uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
-            SonosMusicController.speaker.clear_queue()
-            SonosMusicController.speaker.play_uri(uri)
+            # logging stuff
             self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
             self.speak_dialog("playing.song", {"title": result_dict["trackName"], "interpreter": result_dict["artistName"]})
-            self.log.info(result_dict["url"])
+
+            uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
+            item = SonosMusicController.convert_to_didl_item(uri)
+            SonosMusicController.speaker.clear_queue()
+            index = SonosMusicController.speaker.add_to_queue(item)
+            time.sleep(1)
+            SonosMusicController.speaker.play()
         except IndexError:
             interpreter = message.data.get("interpreter")
             if interpreter == None: 
@@ -229,6 +241,8 @@ class SonosMusicController(MycroftSkill):
             self.log.info("Playing songs by " + result_dict["interpreter"] + " on " + str(SonosMusicController.room))
             self.speak_dialog("playing.music", {"interpreter": result_dict["interpreter"]})
             SonosMusicController.speaker.clear_queue()
+            # randomly chooses 30 songs out of the 75 returned by the api to not play the same 30 songs all the time
+            #song_list = random.sample(result_dict["song_list"], 30)
             final_uris_list = []
             for current_song in result_dict["song_list"]:
                 final_uris_list.append(SonosMusicController.convert_to_uri(current_song))
@@ -238,12 +252,6 @@ class SonosMusicController(MycroftSkill):
         except IndexError:
            self.speak_dialog("no.music.found", {"interpreter": message.data.get("interpreter")})
 
-            # just used for debugging
-            # if (result_dict["song_list"][10] == current_song) or (result_dict["song_list"][20] == current_song):
-            #     state = requests.get(SonosMusicController.url + "state")
-            #     state_json = state.json()
-            #     if str(state_json["playbackState"]) == "STOPPED":
-            #         SonosMusicController.sonos_api(action="play")
 
     @intent_handler("play.radio.intent")
     def play_radio(self, message):

@@ -69,7 +69,7 @@ def search_album_applemusic(title="", interpreter="", country_code = "us"):
 # function to search for songs of the specified interpreter on Apple Music
 # returns a dict with the artistName and a list of trackIds
 def search_songs_of_artist_applemusic(interpreter = "", country_code = "us"):
-    urlInFunction = "https://itunes.apple.com/search?term=" + str(interpreter) + " song&media=music&entity=song&limit=30&artistTerm=" + str(interpreter) + "&country=" + str(country_code)
+    urlInFunction = "https://itunes.apple.com/search?term=" + str(interpreter) + " song&media=music&entity=song&limit=75&artistTerm=" + str(interpreter) + "&country=" + str(country_code)
     response = requests.get(urlInFunction)
     results_json = response.json()
     song_id_list = []
