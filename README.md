@@ -1,5 +1,5 @@
 # <img src="https://raw.githack.com/FortAwesome/Font-Awesome/master/svgs/solid/play-circle.svg" card_color="#000000" width="50" height="50" style="vertical-align:bottom"/> Sonos Music Controller
-A Mycroft AI skill to control everything on your Sonos speakers. Version 3.3
+A Mycroft AI skill to control everything on your Sonos speakers. Version 0.3.3
 
 ## About
 With this skill you can control every aspect of you Sonos system with your Mycroft smart speaker! It supports all the basic commands you need, such as play, pause, volume control and skipping songs, but also provides the option of playing music via your favorite services (outlined below).
