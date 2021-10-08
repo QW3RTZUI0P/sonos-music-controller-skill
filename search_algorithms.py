@@ -77,11 +77,11 @@ def search_songs_of_artist_applemusic(interpreter = "", country_code = "us"):
         if "trackId" in current_entry:
             song_id_list.append(str(current_entry.get("trackId")))
 
-    random.shuffle(song_id_list)
+    final_song_id_list = random.sample(song_id_list, 30)
     # value to check the given interpreter, sometimes it doesn't play songs from the specified interpreter
     # because the stt engine didn't understand the word
     real_interpreter = results_json.get("results")[0].get("artistName")
-    result_dict = {"song_list": song_id_list, "interpreter": str(real_interpreter)}
+    result_dict = {"song_list": final_song_id_list, "interpreter": str(real_interpreter)}
     return result_dict
 
 

@@ -199,11 +199,8 @@ class SonosMusicController(MycroftSkill):
             self.speak_dialog("playing.song", {"title": result_dict["trackName"], "interpreter": result_dict["artistName"]})
 
             uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
-            item = SonosMusicController.convert_to_didl_item(uri)
             SonosMusicController.speaker.clear_queue()
-            index = SonosMusicController.speaker.add_to_queue(item)
-            time.sleep(1)
-            SonosMusicController.speaker.play()
+            SonosMusicController.play_uris([uri])
         except IndexError:
             interpreter = message.data.get("interpreter")
             if interpreter == None: 
