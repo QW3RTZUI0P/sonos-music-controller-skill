@@ -26,6 +26,14 @@ def search_songs_of_artist(interpreter = "", country_code = "", service = ""):
         return search_songs_of_artist_applemusic(interpreter = interpreter, country_code = country_code)
 
 # Apple Music:
+def lookup_id_applemusic(music_service_id = ""):
+    url_in_function = "https://itunes.apple.com/lookup?id=" + str(music_service_id)
+    response = requests.get(url_in_function)
+    results_json = response.json()
+    best_result = results_json.get("results")[0]
+    result_dict = {"title": best_result.get("trackName"), "artist": best_result.get("artistName")}
+    return result_dict
+
 # function for searching a song on Apple Music
 # returns a dict with the trackId, the trackName and the artistName
 def search_song_applemusic(title="", interpreter="", country_code = "us", instance = None):

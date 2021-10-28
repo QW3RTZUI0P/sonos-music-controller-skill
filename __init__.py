@@ -98,7 +98,7 @@ class SonosMusicController(MycroftSkill):
             uri = "x-sonos-spotify:spotify:track:" + str(identifier) + "?sid=9&flags=0&sn=19"
             return uri
         elif service == "apple_music":
-            uri = "x-sonos-http:song%3a" + str(identifier) + ".mp4?sid=" + applemusic_service_id + "&flags=" + applemusic_flags + "&sn=" + applemusic_sn
+            uri = "x-sonos-http:song:" + str(identifier) + ".mp4?sid=" + applemusic_service_id + "&flags=" + applemusic_flags + "&sn=" + applemusic_sn
             return uri
 
     # converts the given uri to a didl item that can be handled way better by soco (e.g. song can be skipped)
@@ -106,6 +106,16 @@ class SonosMusicController(MycroftSkill):
         resources = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
         item = DidlObject(resources=resources, title=title, parent_id="", item_id="")
         return item
+
+    def convert_to_music_service_id(uri = ""):
+        service = SonosMusicController.music_service
+        if service == "spotify":
+            pass
+        elif service == "apple_music":
+            part01 = uri.split(":")[2]
+            part02 = part01.split(".")[0]
+            music_service_id = part02
+            return music_service_id
     
     
     # function to clear the sonos queue
@@ -184,7 +194,23 @@ class SonosMusicController(MycroftSkill):
         SonosMusicController.speaker.volume = str(new_volume)
 
 
-    
+    @intent_handler('which.song.intent')
+    def which_song_is_playing(self):
+        real_title = ""
+        realt_interpreter = ""
+        track_info = SonosMusicController.speaker.get_current_track_info()
+        title = track_info["title"]
+        result_dict = track_info
+        if "x-sonos" in title:
+            music_service_id = SonosMusicController.convert_to_music_service_id(track_info["uri"])
+            # only works for Apple Music
+            # TODO: make this compatible with spotify
+            result_dict = lookup_id_applemusic(music_service_id)
+            self.log.info(str(result_dict))
+
+        self.speak_dialog("which.song", {"title": result_dict["title"], "interpreter": result_dict["artist"]})
+
+
         
 
     # playing music on Sonos
