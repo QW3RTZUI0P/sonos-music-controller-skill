@@ -79,7 +79,7 @@ class SonosMusicController(MycroftSkill):
     
     def initialize_music_services():
         if SonosMusicController.music_service == None or SonosMusicController.music_service == "":
-            self.speak_dialog("no.music.service.chosen")
+            self.speak_dialog("no.service.chosen.error")
         elif SonosMusicController.music_service == "spotify":
             SonosMusicController.initialize_spotify()
         elif SonosMusicController.music_service == "apple_music":
@@ -145,8 +145,6 @@ class SonosMusicController(MycroftSkill):
 
     def reduce_volume_of_sonos_speaker(self):
         # gets the current volume level of the Sonos speaker and stores it in volume
-        # state = requests.get(SonosMusicController.url + "state")
-        # state_json = state.json()
         if SonosMusicController.speaker.get_current_transport_info().get("current_transport_state") == "PLAYING":
             SonosMusicController.volume = str(SonosMusicController.speaker.volume)
             self.log.info("Reducing volume of Sonos speaker")
@@ -159,14 +157,13 @@ class SonosMusicController(MycroftSkill):
 
     def increase_volume_of_sonos_speaker(self):
         if SonosMusicController.volume != "0":
-            # increases the volume of the Sonos speaker
             self.log.info("Increasing volume on Sonos speaker")
             SonosMusicController.speaker.volume = SonosMusicController.volume
             SonosMusicController.volume = "0"
 
     # General controls for Sonos
     # controlled via the mycroft-playback-control messagebus
-
+    # TODO: fix next_song and previous_song (they are for some reason currently not working, idk why)
     def pause(self, message):
         SonosMusicController.speaker.pause()
         
@@ -186,18 +183,35 @@ class SonosMusicController(MycroftSkill):
         #TODO: implement error handling: what will happen if volume is above 100?
         SonosMusicController.speaker.volume = str(new_volume)
 
+    @intent_handler('much.louder.intent')
+    def much_louder(self, message):
+        old_volume = SonosMusicController.volume
+        new_volume = int(old_volume) + 20
+        SonosMusicController.speaker.volume = str(new_volume)
+
+
     @intent_handler('quieter.intent')
     def quieter(self, message):
         old_volume = SonosMusicController.volume
         new_volume = int(old_volume) - 10
-        #TODO: implement error handling: what will happen if volume is below zero?
+        #TODO: implement error handling: what will happen if volume is below 0?
         SonosMusicController.speaker.volume = str(new_volume)
+
+    @intent_handler('much.quieter.intent')
+    def much_quieter(self, message):
+        old_volume = SonosMusicController.volume
+        new_volume = int(old_volume) - 20
+        SonosMusicController.speaker.volume = str(new_volume)
+
 
 
     @intent_handler('which.song.intent')
     def which_song_is_playing(self):
+        if SonosMusicController.music_service != "apple_music":
+            self.speak_dialog("not.working.error", {"service": "spotify"})
         real_title = ""
-        realt_interpreter = ""
+        real_interpreter = ""
+        # takes the Apple Music Song ID and looks it up on the iTunes Search API to get the required information (because soco often can't give us this information)
         track_info = SonosMusicController.speaker.get_current_track_info()
         title = track_info["title"]
         result_dict = track_info
@@ -224,9 +238,11 @@ class SonosMusicController(MycroftSkill):
             self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
             self.speak_dialog("playing.song", {"title": result_dict["trackName"], "interpreter": result_dict["artistName"]})
 
+            # responsible for playing the actual songs on the Sonos speaker
             uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
             SonosMusicController.speaker.clear_queue()
             SonosMusicController.play_uris([uri])
+        # throws an error if no song is found for the search terms
         except IndexError:
             interpreter = message.data.get("interpreter")
             if interpreter == None: 
@@ -243,11 +259,13 @@ class SonosMusicController(MycroftSkill):
             result_dict = search_album(title=message.data.get("title"), interpreter=message.data.get("interpreter"), country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
             self.log.info("Playing the album " + str(result_dict["collectionName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
             self.speak_dialog("playing.album", {"title": result_dict["collectionName"], "interpreter": result_dict["artistName"]})
+            # responsible for playing the actual songs on the Sonos speaker
             SonosMusicController.speaker.clear_queue()
             final_uris_list = []
             for current_id in result_dict["songIds"]:
                 final_uris_list.append(SonosMusicController.convert_to_uri(current_id))
             SonosMusicController.play_uris(final_uris_list)
+        # throws an error if no albums (no songs in this album) are found for the search terms
         except IndexError:
             interpreter = message.data.get("interpreter")
             if interpreter == None: 
@@ -272,10 +290,13 @@ class SonosMusicController(MycroftSkill):
                 if result_dict["song_list"][-1] == current_song:
                     SonosMusicController.play_uris(final_uris_list)
                     return
+        # throws an error if a search for the specified interpreter on apple music doesn't produce any results
         except IndexError:
            self.speak_dialog("no.music.found", {"interpreter": message.data.get("interpreter")})
 
 
+    # not really working at the moment
+    # TODO: implement radio stations
     @intent_handler("play.radio.intent")
     def play_radio(self, message):
         title = message.data.get("title")

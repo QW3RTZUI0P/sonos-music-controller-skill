@@ -5,7 +5,7 @@ import requests
 import random
 from .static_values import *
 
-# General functions
+# general functions (to make __init__.py less complicated when using different music services)
 def search_song(title = "", interpreter = "", country_code = "", service = "", instance = None):
     if service == "spotify":
         return search_song_spotify(title = title, interpreter = interpreter, country_code = country_code)
@@ -26,6 +26,8 @@ def search_songs_of_artist(interpreter = "", country_code = "", service = ""):
         return search_songs_of_artist_applemusic(interpreter = interpreter, country_code = country_code)
 
 # Apple Music:
+
+# returns a dict with the title and the artist of the song with the given id on Apple Music
 def lookup_id_applemusic(music_service_id = ""):
     url_in_function = "https://itunes.apple.com/lookup?id=" + str(music_service_id)
     response = requests.get(url_in_function)
@@ -129,7 +131,7 @@ def validate_entries_for(array = [], key = "", value = ""):
 
 # Spotify:
 # returns the public Spotify access token currently available on open.spotify.com via web scraping
-# this is a very unstable and ugly piece of code, but for now it'll do
+# this is a very unstable and ugly piece of code, but for now it'll do (someone with a little bit web scraping experience could surely do a better job here ;))
 def get_spotify_access_token():
     url = "https://open.spotify.com/"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"}
