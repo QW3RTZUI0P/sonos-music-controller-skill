@@ -1,2 +1,2 @@
-ich spiele das album {{title}} von {{interpreter}}
-ich spiele die platte {{title}} von {{interpreter}}
+ich spiele das album {{title}} von {{artist}}
+ich spiele die platte {{title}} von {{artist}}

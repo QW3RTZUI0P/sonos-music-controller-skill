@@ -1,4 +1,4 @@
 spiele das album {title}
-spiele das album {title} von {interpreter}
-spiele von {interpreter} das album {title}
-spiele das album {title} von {interpreter} (auf | in) (der | dem | ) {room}
+spiele das album {title} von {artist}
+spiele von {artist} das album {title}
+spiele das album {title} von {artist} (auf | in) (der | dem | ) {room}

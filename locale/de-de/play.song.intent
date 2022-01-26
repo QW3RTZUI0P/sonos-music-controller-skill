@@ -1,6 +1,6 @@
 spiele (das lied | den song | den track | die single | ) {title}
-spiele (das lied | den song | den track | die single | ) {title} ( auf |        in) (der | dem | ) {room}
-spiele (das lied | den song | den track | die single | ) {title} von {interpreter}
-spiele (das lied | den song | den track | die single | ) {title} von {interpreter} ( auf |  in) (der | dem | ) {room}
-spiele von {interpreter} (das lied | den song | den track | die single) {title}
-spiele von {interpreter} (das lied | den song | den track | die single) {title} ( auf |  in) (der | dem | ) {room}
+spiele (das lied | den song | den track | die single | ) {title} ( auf | in) (der | dem | ) {room}
+spiele (das lied | den song | den track | die single | ) {title} von {artist}
+spiele (das lied | den song | den track | die single | ) {title} von {artist} (auf | in) (der | dem | ) {room}
+spiele von {artist} (das lied | den song | den track | die single) {title}
+spiele von {artist} (das lied | den song | den track | die single) {title} (auf | in) (der | dem | ) {room}

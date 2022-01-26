@@ -1,4 +1,4 @@
-ich spiele musik von {{interpreter}}
-jetzt kommt musik von {{interpreter}}
-musik von {{interpreter}}
-ich spiele (lieder | songs) von {{interpreter}}
+ich spiele musik von {{artist}}
+jetzt kommt musik von {{artist}}
+musik von {{artist}}
+ich spiele (lieder | songs) von {{artist}}
