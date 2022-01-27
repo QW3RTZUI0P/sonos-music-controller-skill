@@ -1,13 +1,15 @@
 from mycroft import MycroftSkill, intent_handler
 # used to get the placement of the Mycroft device
 from mycroft.api import DeviceApi
+# used to make breaks in the code
+import time
+import random
 # used to control the Sonos speakers
 import soco
 from soco.data_structures import *
-# used to make breaks in the code
-import time
+# used for internet radio
+from pyradios import RadioBrowser
 
-import random
 
 # contains all the necessary search algorithms to search for music on the various services
 from .search_algorithms import *
@@ -316,14 +318,18 @@ class SonosMusicController(MycroftSkill):
         title = message.data.get("title")
         if title == None:
             title = ""
-        radiostation = ""
-        self.speak_dialog("playing.radio", {"radio": str(title)})
-        if title == "":
-            radiostation = SonosMusicController.radio01
-        elif SonosMusicController.radio01 in title:
-            radiostation = "favorite/radiogong"
+        radio_browser = RadioBrowser()
+        radio_search_results = radio_browser.search(name = title, order = "clickcount")
+        best_result = None
+        for i in radio_search_results:
+            if i["codec"] == "MP3":
+                best_result = i
+                break
+        self.log.info(message.data.get("title"))
+        self.log.info(best_result["url_resolved"])
+        SonosMusicController.speaker.play_uri(best_result["url_resolved"])
+        self.speak_dialog("playing.radio", {"radio": best_result["name"]})
 
-        SonosMusicController.sonos_api_clear_queue(action=radiostation)
 
 
 def create_skill():
