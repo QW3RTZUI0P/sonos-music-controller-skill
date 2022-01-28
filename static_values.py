@@ -6,6 +6,8 @@ that are needed to control the Sonos speakers over the SoCo library
 
 # Apple Music:
 applemusic_api_url = "https://itunes.apple.com/"
+applemusic_api_search = applemusic_api_url + "search"
+applemusic_api_lookup = applemusic_api_url + "lookup"
 applemusic_service_id = "204"
 applemusic_flags = "8224"
 applemusic_sn = "13"

@@ -30,7 +30,7 @@ def search_songs_of_artist(artist = "", country_code = "", service = ""):
 # returns a dict with the title and the artist of the song with the given id on Apple Music
 def lookup_id_applemusic(music_service_id = "", country_code = "us"):
     url_in_function = applemusic_api_url + "lookup?id=" + str(music_service_id) + "&country=" + str(country_code)
-    response = requests.get(url_in_function)
+    response = requests.get(url = applemusic_api_url + "lookup", params = {"id": str(music_service_id), "country": str(country_code)})
     results_json = response.json()
     best_result = results_json.get("results")[0]
     result_dict = {"title": best_result.get("trackName"), "artist": best_result.get("artistName")}
@@ -42,14 +42,14 @@ def search_song_applemusic(title="", artist="", country_code = "us"):
     # replaces every space with + (important for the API to work properly)
     title_in_url = str(title).replace(" ", "+")
     artist_in_url = str(artist).replace(" ", "+")
-    # this is the url that returns a json file with the search results from the iTunes Search API (https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/)
-    urlInFunction = ""
+    # the parameters that will be passed on to the iTunes Search API
+    url_params = {}
     if artist == None:
-        urlInFunction = applemusic_api_url + "search?term=" + title_in_url + "&media=music&country=" + str(country_code) + "&entity=song&attribute=songTerm"
+        url_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "attribute": "songTerm"}
     else:
-        urlInFunction = applemusic_api_url + "search?term=" + title_in_url + "&media=music&country=" + str(country_code) + "&entity=song&attribute=songTerm&artistTerm=" + artist_in_url
+        url_params = {"term": title_in_url, "artistTerm": artist_in_url, "media": "music", "country": str(country_code), "entity": "song", "attribute": "songTerm"}
 
-    response = requests.get(urlInFunction)
+    response = requests.get(url = applemusic_api_search, params = url_params)
     results_json = response.json()
     best_result = results_json.get("results")[0]
     result_dict = {"trackId": best_result.get("trackId"), "trackName": best_result.get("trackName"), "artistName": best_result.get("artistName"), "url": urlInFunction}
@@ -64,14 +64,19 @@ def search_album_applemusic(title="", artist="", country_code = "us"):
 
     url_album = ""
     url_songs = ""
+    url_album_params = {}
+    url_songs_params = {}
     if artist == None:
-        url_album = applemusic_api_url + "search?term=" + str(title_in_url) + "&media=music&entity=album&albumTerm=" + str(title_in_url) + "&country=" + str(country_code)
-        url_songs = applemusic_api_url + "search?term=" + str(title_in_url) + "&media=music&entity=song&albumTerm=" + str(title_in_url) + "&country=" + str(country_code)
+        url_album_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "album", "albumTerm": title_in_url}
+        url_songs_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "albumTerm": title_in_url}
+
     else: 
         url_album = applemusic_api_url + "search?term=" + str(title_in_url) + " " + str(artist_in_url) + "&media=music&entity=album&albumTerm=" + str(title_in_url) + "&artistTerm=" + str(artist_in_url) + "&country=" + str(country_code)
         url_songs = applemusic_api_url + "search?term=" + str(title_in_url) + " " + str(artist_in_url) + "&media=music&entity=song&albumTerm=" + str(title_in_url) + "&artistTerm=" + str(artist_in_url) + "&country=" + str(country_code)
-    response_album = requests.get(url_album)
-    response_songs = requests.get(url_songs)
+        url_album_params = {"term": title_in_url + " " + artist_in_url, "media": "music", "country": str(country_code), "entity": "album", "albumTerm": title_in_url, "artistTerm": artist_in_url}
+        url_songs_params = {"term": title_in_url + " " + artist_in_url, "media": "music", "country": str(country_code), "entity": "song", "albumTerm": title_in_url, "artistTerm": artist_in_url}
+    response_album = requests.get(url = applemusic_api_search, params = url_album_params)
+    response_songs = requests.get(url = applemusic_api_search, params = url_songs_params)
     results_album = response_album.json()
     results_songs = response_songs.json()
     best_album_result = results_album.get("results")[0]
@@ -88,7 +93,8 @@ def search_songs_of_artist_applemusic(artist = "", country_code = "us"):
     # replaces every space with + (important for the API to work properly)
     artist_in_url = str(artist).replace(" ", "+") 
     urlInFunction = applemusic_api_url + "search?term=" + str(artist_in_url) + " song&media=music&entity=song&limit=75&artistTerm=" + str(artist_in_url) + "&country=" + str(country_code)
-    response = requests.get(urlInFunction)
+    url_params = {"term": artist_in_url + " song", "media": "music", "country": str(country_code), "entity": "song", "limit": "75", "artistTerm": artist_in_url}
+    response = requests.get(url = applemusic_api_search, params = url_params)
     results_json = response.json()
     song_id_list = []
     for current_entry in results_json.get("results"):
@@ -143,7 +149,7 @@ def validate_entries_for(array = [], key = "", value = ""):
 # this is a very unstable and ugly piece of code, but for now it'll do (someone with a little bit web scraping experience could surely do a better job here ;))
 def get_spotify_access_token():
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"}
-    response = requests.get(spotify_access_token_url, headers=headers)
+    response = requests.get(spotify_access_token_url, headers = headers)
     # finds the location where the accessToken is
     index = response.text.find('"accessToken')
     liste = response.text[index:index+300]
@@ -154,15 +160,15 @@ def get_spotify_access_token():
 
 # returns a dict with the trackId, the trackName and the artistName
 def search_song_spotify(title = "", artist = "", country_code = ""):
-    url = ""
+    url_params = {}
     if artist == None:
-        url = spotify_api_url + "q=" + str(title) + "&type=track&limit=5"
+        url_params = {"q": str(title), "type": "track", "limit": "5"}
     else: 
-        url = spotify_api_url + "q=" + str(title) + " " + str(artist) + "&type=track&limit=5"
+        url_params = {"q": str(title) + " " + str(artist), "type": "track", "limit": "5"}
         
     token = get_spotify_access_token()
     headers = {"Authorization": "Bearer " + token}
-    response = requests.get(url, headers = headers)
+    response = requests.get(url = spotify_api_url, params = url_params, headers = headers)
     json = response.json()
     best_result = json.get("tracks").get("items")[0]
     trackId = best_result.get("uri").split(":")[2]
@@ -172,14 +178,15 @@ def search_song_spotify(title = "", artist = "", country_code = ""):
 # returns a dict with the songIds of the tracks in the album, the collectionName and the artistName
 def search_album_spotify(title = "", artist = "", country_code = ""):
     url = ""
+    url_params = {}
     if artist == None:
-        url  = spotify_api_url + "q=" + str(title) + "&type=track"
+        url_params = {"q": str(title), "type": "album"}
     else:
-        url  = spotify_api_url + "q=" + str(title) + " " + str(artist) + "&type=track"
+        url_params = {"q": str(title) + " " + str(artist), "type": "album"}
     token = get_spotify_access_token()
     headers = {"Authorization": "Bearer " + token}
 
-    response = requests.get(url, headers = headers)
+    response = requests.get(url = spotify_api_url, params = params, headers = headers)
     json = response.json()
     results = json.get("tracks").get("items")
     first_result = results[0]
@@ -194,10 +201,10 @@ def search_album_spotify(title = "", artist = "", country_code = ""):
 
 # returns a dict with the list of songIds and the artistName
 def search_songs_of_artist_spotify(artist = "", country_code = ""):
-    url = spotify_api_url + "q=" + str(artist) + "&type=track&limit=30"
+    url_params = {"q": str(artist), "type": "track", "limit": "30"}
     token = get_spotify_access_token()
     headers = {"Authorization": "Bearer " + token}
-    response = requests.get(url, headers = headers)
+    response = requests.get(url = spotify_api_url, params = url_params, headers = headers)
     json = response.json()
     results = json.get("tracks").get("items")
     song_id_list = []

@@ -316,19 +316,27 @@ class SonosMusicController(MycroftSkill):
     @intent_handler("play.radio.intent")
     def play_radio(self, message):
         title = message.data.get("title")
-        if title == None:
-            title = ""
-        radio_browser = RadioBrowser()
-        radio_search_results = radio_browser.search(name = title, order = "clickcount")
-        best_result = None
-        for i in radio_search_results:
-            if i["codec"] == "MP3":
-                best_result = i
-                break
-        self.log.info(message.data.get("title"))
-        self.log.info(best_result["url_resolved"])
-        SonosMusicController.speaker.play_uri(best_result["url_resolved"])
-        self.speak_dialog("playing.radio", {"radio": best_result["name"]})
+        try: 
+            if title == None:
+                title = ""
+            radio_browser = RadioBrowser()
+            radio_search_results = radio_browser.search(name = title, order = "clickcount")
+            best_result = radio_search_results[-1]
+            # for i in radio_search_results:
+            #     if i["codec"] == "MP3":
+            #         best_result = i
+            #         break
+            radio_url = best_result["url_resolved"]
+            radio_uri_for_sonos = ""
+            if "https://" in radio_url:
+                radio_uri_for_sonos = radio_url.replace("https://", "x-rincon-mp3radio://") 
+            else:
+                radio_uri_for_sonos = radio_url.replace("http://", "x-rincon-mp3radio://") 
+            
+            SonosMusicController.speaker.play_uri(uri = radio_uri_for_sonos, title = best_result["name"], force_radio = True)
+            self.speak_dialog("playing.radio", {"radio": str(best_result["name"])})
+        except IndexError:
+            self.speak_dialog("no.radio.found.error", {"radio": title})
 
 
 
