@@ -1,4 +1,3 @@
-
 skillMetadata:
   sections:
     - name: Services
@@ -7,15 +6,4 @@ skillMetadata:
           type: select
           label: Select your music service
           options: Spotify|spotify;Apple Music|apple_music
-          value: 
-
-    - name: Radio
-      fields:
-        - type: label
-          label: To play radio on Sonos, add a radio sender to your Sonos favorites and rename it to something Mycroft can understand. Then enter here the name of the just created favorite
-        - name: radio
-          type: text
-          label: Radio
-          value: ""
-    
-
+          value: apple_music 

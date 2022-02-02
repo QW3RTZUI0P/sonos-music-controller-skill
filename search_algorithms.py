@@ -52,7 +52,7 @@ def search_song_applemusic(title="", artist="", country_code = "us"):
     response = requests.get(url = applemusic_api_search, params = url_params)
     results_json = response.json()
     best_result = results_json.get("results")[0]
-    result_dict = {"trackId": best_result.get("trackId"), "trackName": best_result.get("trackName"), "artistName": best_result.get("artistName"), "url": urlInFunction}
+    result_dict = {"trackId": best_result.get("trackId"), "trackName": best_result.get("trackName"), "artistName": best_result.get("artistName")}
     return result_dict
 
 # function for searching an album on Apple Music
