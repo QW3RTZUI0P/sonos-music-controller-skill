@@ -74,7 +74,7 @@ class SonosMusicController(MycroftSkill):
                        self.increase_volume_of_sonos_speaker)
         # sets up the listeners that increase the volume back to normal level when Mycroft has been falsely activated
         self.add_event("recognizer_loop:record_end", self.increase_volume_of_sonos_speaker_after_false_activation)
-        self.add_event("recognizer_loop:utterance", self.filter_out_real_false_activation)
+        self.add_event("recognizer_loop:utterance", self.filter_out_real_activations)
         if SonosMusicController.music_service == "":
             self.speak_dialog("no.service.chosen.error")
             
@@ -145,12 +145,10 @@ class SonosMusicController(MycroftSkill):
 
 
     # functions to automatically lower the volume of the Sonos speaker and to increase it again when Mycroft has finished speaking
-
     def reduce_volume_of_sonos_speaker(self):
         # gets the current volume level of the Sonos speaker and stores it in volume
         if SonosMusicController.speaker.get_current_transport_info().get("current_transport_state") == "PLAYING":
             SonosMusicController.volume = str(SonosMusicController.speaker.volume)
-            self.log.info("Automatically reducing volume of Sonos speaker")
             # reduces the volume of the Sonos speaker
             SonosMusicController.speaker.volume = "5"
         else:
@@ -159,23 +157,23 @@ class SonosMusicController(MycroftSkill):
 
     def increase_volume_of_sonos_speaker(self):
         if SonosMusicController.volume != "0":
-            self.log.info("Automatically increasing volume of Sonos speaker")
             SonosMusicController.speaker.volume = SonosMusicController.volume
 
     # increases the volume after a few seconds when Mycroft couldn't understand any utterances
     def increase_volume_of_sonos_speaker_after_false_activation(self):
         if SonosMusicController.volume != "0":
             SonosMusicController.increase_volume_after_false_activation = True
-            # TODO: make this solution here better and more reliable (not a static value like 6 seconds)
+            # TODO: make this solution here better and more reliable (not a static value like 10 seconds)
             time.sleep(10)
         if SonosMusicController.increase_volume_after_false_activation == True:
             self.log.info("Automatically increasing volume of Sonos speaker")
             SonosMusicController.speaker.volume = SonosMusicController.volume
+            SonosMusicController.increase_volume_after_false_activation = False
 
     # when Mycroft understand an utterance this function will be executed
     # it tells increase_volume_of_sonos_speaker_after_false_activation() that it shouldn't increase the volume because
     # increase_volume_of_sonos_speaker() will do so after the audio output is done 
-    def filter_out_real_false_activation(self, message):
+    def filter_out_real_activations(self, message):
         SonosMusicController.increase_volume_after_false_activation = False
 
     # General controls for Sonos
