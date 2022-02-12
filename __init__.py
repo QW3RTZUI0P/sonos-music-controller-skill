@@ -141,7 +141,7 @@ class SonosMusicController(MycroftSkill):
             SonosMusicController.speaker.add_to_queue(item)
             if uri_list[0] == current_uri:
                 time.sleep(1)
-                SonosMusicController.speaker.play()
+                SonosMusicController.speaker.play_from_queue(0)
 
 
     # functions to automatically lower the volume of the Sonos speaker and to increase it again when Mycroft has finished speaking
@@ -252,7 +252,7 @@ class SonosMusicController(MycroftSkill):
             self.log.info(message.data.get("artist"))
             self.log.info(message.data.get("room"))
             result_dict = search_song(title=message.data.get('title'), artist=message.data.get('artist'),
-                                      country_code = SonosMusicController.country_code, service = SonosMusicController.music_service)
+                                      country_code = SonosMusicController.country_code, service = SonosMusicController.music_service, self = self)
             # logging stuff
             self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
             self.speak_dialog("playing.song", {"title": result_dict["trackName"], "artist": result_dict["artistName"]})
