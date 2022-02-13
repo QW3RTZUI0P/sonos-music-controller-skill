@@ -26,6 +26,9 @@ def search_songs_of_artist(artist = "", country_code = "", service = ""):
     elif service == "apple_music":
         return search_songs_of_artist_applemusic(artist = artist, country_code = country_code)
 
+# TODO: bring url parameters in the right order
+# TODO: check which url parameters are actually needed
+# TODO: clean everything up a bit
 # Apple Music:
 # returns a dict with the title and the artist of the song with the given id on Apple Music
 def lookup_id_applemusic(music_service_id = "", country_code = "us"):
@@ -50,13 +53,14 @@ def search_song_applemusic(title="", artist="", country_code = "us", self = None
     else:
         url_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "attribute": "songTerm", "limit": "10"}
 
-    url_params_string = urllib.parse.urlencode(url_params, safe='+äöü')
+    url_params_string = urllib.parse.urlencode(url_params, safe='+äöü\'')
     response = requests.get(url = applemusic_api_search, params = url_params_string)
     results_json = response.json().get("results")
     best_result = None
+    self.log.info(response.url)
     # makes sure that the song is from the specified artist
     if artist == None:
-        best_result = results.json[0]
+        best_result = results_json[0]
     else:
         for current_result in results_json:
             if current_result.get("artistName").lower() == str(artist):
@@ -85,8 +89,8 @@ def search_album_applemusic(title="", artist="", country_code = "us"):
         url_songs_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "albumTerm": title_in_url}
 
     else: 
-        url_album_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "album", "albumTerm": title_in_url, "artistTerm": artist_in_url, "attribute": "albumTerm", "limit": "1"}
-        url_songs_params = {"term": title_in_url + " " + artist_in_url, "media": "music", "country": str(country_code), "entity": "song", "albumTerm": title_in_url, "artistTerm": artist_in_url}
+        url_album_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "album", "attribute": "albumTerm", "limit": "1"}
+        url_songs_params = {"term": title_in_url + "+" + artist_in_url, "media": "music", "country": str(country_code), "entity": "song"}
 
 
     url_album_params_string = urllib.parse.urlencode(url_album_params, safe = '+äöü')

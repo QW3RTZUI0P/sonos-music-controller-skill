@@ -246,9 +246,6 @@ class SonosMusicController(MycroftSkill):
     @intent_handler("play.song.intent")
     def play_song(self, message):
         try:
-            self.log.info(message.data.get("title"))
-            self.log.info(message.data.get("artist"))
-            self.log.info(message.data.get("room"))
             result_dict = search_song(title=message.data.get('title'), artist=message.data.get('artist'),
                                       country_code = SonosMusicController.country_code, service = SonosMusicController.music_service, self = self)
             # logging stuff
