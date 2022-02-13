@@ -27,7 +27,6 @@ def search_songs_of_artist(artist = "", country_code = "", service = ""):
         return search_songs_of_artist_applemusic(artist = artist, country_code = country_code)
 
 # Apple Music:
-
 # returns a dict with the title and the artist of the song with the given id on Apple Music
 def lookup_id_applemusic(music_service_id = "", country_code = "us"):
     url_in_function = applemusic_api_url + "lookup?id=" + str(music_service_id) + "&country=" + str(country_code)
@@ -60,10 +59,10 @@ def search_song_applemusic(title="", artist="", country_code = "us", self = None
         best_result = results.json[0]
     else:
         for current_result in results_json:
-            self.log.info("snons")
             if current_result.get("artistName").lower() == str(artist):
                 best_result = current_result
                 break
+        # TODO: throw custom error: Mycroft couldn't find any songs with the specified name by the specified artist
         if best_result == None:
             best_result = results_json[0]
 
@@ -229,6 +228,3 @@ def search_songs_of_artist_spotify(artist = "", country_code = ""):
 
     result_dict = {"song_list": song_id_list, "artist": str(results[0].get("artists")[0].get("name"))}
     return result_dict
-
-
-

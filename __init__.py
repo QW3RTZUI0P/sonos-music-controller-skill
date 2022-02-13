@@ -159,14 +159,14 @@ class SonosMusicController(MycroftSkill):
             SonosMusicController.speaker.volume = SonosMusicController.volume
 
     # increases the volume after a few seconds when Mycroft couldn't understand any utterances
+    # solves the problem that Mycroft lowered the volume of the Sonos speaker every time he got falsely activated
     def increase_volume_of_sonos_speaker_after_false_activation(self):
         if SonosMusicController.volume != "0":
             SonosMusicController.increase_volume_after_false_activation = True
             # TODO: make this solution here better and more reliable (not a static value like 10 seconds)
-            # 10 seconds for now because the longest time Mycroft records is set to 10 seconds default
+            # longest time for Mycroft to send the audio recording to the STT service and receive an answer from it with the utterance (for now 10 seconds)
             time.sleep(10)
         if SonosMusicController.increase_volume_after_false_activation == True:
-            self.log.info("Automatically increasing volume of Sonos speaker")
             SonosMusicController.speaker.volume = SonosMusicController.volume
             SonosMusicController.increase_volume_after_false_activation = False
 
