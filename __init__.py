@@ -28,7 +28,7 @@ class SonosMusicController(MycroftSkill):
     # value that stores the volume of the Sonos speaker when Mycroft lowers its volume
     volume = "0"
     # helps with the volume increase after Mycroft has been falsely activated
-    increase_volume_after_false_activation = True
+    increase_volume_after_false_activation = False
     # value that stores whether the Sonos speaker is playing
     is_sonos_playing = False
 
@@ -75,9 +75,7 @@ class SonosMusicController(MycroftSkill):
         # sets up the listeners that increase the volume back to normal level when Mycroft has been falsely activated
         self.add_event("recognizer_loop:record_end", self.increase_volume_of_sonos_speaker_after_false_activation)
         self.add_event("recognizer_loop:utterance", self.filter_out_real_activations)
-        if SonosMusicController.music_service == "":
-            self.speak_dialog("no.service.chosen.error")
-            
+
 
     # initialisation methods:
     def initialize_soco():
@@ -85,6 +83,7 @@ class SonosMusicController(MycroftSkill):
         for current_speaker in SonosMusicController.all_speakers:
             if current_speaker.player_name == SonosMusicController.room:
                 SonosMusicController.speaker = current_speaker
+                # TODO: add default value for speaker here or do something different (e.g. speaker not found dialog)
     
     def initialize_music_services(self):
         if SonosMusicController.music_service == None or SonosMusicController.music_service == "":
@@ -164,6 +163,7 @@ class SonosMusicController(MycroftSkill):
         if SonosMusicController.volume != "0":
             SonosMusicController.increase_volume_after_false_activation = True
             # TODO: make this solution here better and more reliable (not a static value like 10 seconds)
+            # 10 seconds for now because the longest time Mycroft records is set to 10 seconds default
             time.sleep(10)
         if SonosMusicController.increase_volume_after_false_activation == True:
             self.log.info("Automatically increasing volume of Sonos speaker")

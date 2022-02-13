@@ -53,7 +53,6 @@ def search_song_applemusic(title="", artist="", country_code = "us", self = None
 
     url_params_string = urllib.parse.urlencode(url_params, safe='+äöü')
     response = requests.get(url = applemusic_api_search, params = url_params_string)
-    self.log.info(response.url)
     results_json = response.json()
     best_result = results_json.get("results")[0]
     result_dict = {"trackId": best_result.get("trackId"), "trackName": best_result.get("trackName"), "artistName": best_result.get("artistName")}
