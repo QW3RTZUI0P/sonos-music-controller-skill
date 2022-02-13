@@ -47,14 +47,26 @@ def search_song_applemusic(title="", artist="", country_code = "us", self = None
     # the parameters that will be passed on to the iTunes Search API
     url_params = {}
     if artist == None:
-        url_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "limit":"1"}
+        url_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "attribute": "songTerm",  "limit":"10"}
     else:
-        url_params = {"term": title_and_artist, "media": "music", "country": str(country_code), "entity": "song", "limit": "1"}
+        url_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "attribute": "songTerm", "limit": "10"}
 
     url_params_string = urllib.parse.urlencode(url_params, safe='+äöü')
     response = requests.get(url = applemusic_api_search, params = url_params_string)
-    results_json = response.json()
-    best_result = results_json.get("results")[0]
+    results_json = response.json().get("results")
+    best_result = None
+    # makes sure that the song is from the specified artist
+    if artist == None:
+        best_result = results.json[0]
+    else:
+        for current_result in results_json:
+            self.log.info("snons")
+            if current_result.get("artistName").lower() == str(artist):
+                best_result = current_result
+                break
+        if best_result == None:
+            best_result = results_json[0]
+
     result_dict = {"trackId": best_result.get("trackId"), "trackName": best_result.get("trackName"), "artistName": best_result.get("artistName")}
     return result_dict
 
@@ -99,7 +111,7 @@ def search_album_applemusic(title="", artist="", country_code = "us"):
 def search_songs_of_artist_applemusic(artist = "", country_code = "us"):
     # replaces every space with + (important for the API to work properly)
     artist_in_url = str(artist).replace(" ", "+") 
-    url_params = {"term": artist_in_url, "media": "music", "country": str(country_code), "entity": "song", "artistTerm": artist_in_url, "attribute": "artistTerm", "limit": "75"}
+    url_params = {"term": artist_in_url, "media": "music", "country": str(country_code), "entity": "song", "attribute": "artistTerm", "limit": "100"}
     url_params_string = urllib.parse.urlencode(url_params, safe='+äöü')
     response = requests.get(url = applemusic_api_search, params = url_params_string)
     results_json = response.json()
@@ -108,12 +120,9 @@ def search_songs_of_artist_applemusic(artist = "", country_code = "us"):
         if "trackId" in current_entry:
             song_id_list.append(str(current_entry.get("trackId")))
 
-    # randomly chooses 30 songs out of the 75 returned by the api (to not play the same 30 songs all the time)
+    # randomly chooses 30 songs out of the 100 returned by the api (to not play the same 30 songs all the time)
     final_song_id_list = random.sample(song_id_list, 30)
-    # value to check the given artist, sometimes it doesn't play songs from the specified artist
-    # (because the stt engine didn't understand the word)
-    real_artist = results_json.get("results")[0].get("artistName")
-    result_dict = {"song_list": final_song_id_list, "artist": str(real_artist)}
+    result_dict = {"song_list": final_song_id_list, "artist": str(artist)}
     return result_dict
 
 
