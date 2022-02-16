@@ -26,8 +26,6 @@ def search_songs_of_artist(artist = "", country_code = "", service = ""):
     elif service == "apple_music":
         return search_songs_of_artist_applemusic(artist = artist, country_code = country_code)
 
-# TODO: bring url parameters in the right order
-# TODO: check which url parameters are actually needed
 # TODO: clean everything up a bit
 # Apple Music:
 # returns a dict with the title and the artist of the song with the given id on Apple Music
@@ -49,11 +47,11 @@ def search_song_applemusic(title="", artist="", country_code = "us", self = None
     # the parameters that will be passed on to the iTunes Search API
     url_params = {}
     if artist == None:
-        url_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "attribute": "songTerm",  "limit":"10"}
+        url_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "song", "attribute": "songTerm",  "limit":"10"}
     else:
-        url_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "attribute": "songTerm", "limit": "10"}
+        url_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "song", "attribute": "songTerm", "limit": "10"}
 
-    url_params_string = urllib.parse.urlencode(url_params, safe='+äöü\'')
+    url_params_string = urllib.parse.urlencode(url_params, safe='+äöü')
     response = requests.get(url = applemusic_api_search, params = url_params_string)
     results_json = response.json().get("results")
     best_result = None
@@ -85,12 +83,12 @@ def search_album_applemusic(title="", artist="", country_code = "us"):
     url_album_params = {}
     url_songs_params = {}
     if artist == None:
-        url_album_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "album", "albumTerm": title_in_url, "attribute": "albumTerm", "limit": 1}
-        url_songs_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "song", "albumTerm": title_in_url}
+        url_album_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "album", "attribute": "albumTerm", "limit": 1}
+        url_songs_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "song"}
 
     else: 
-        url_album_params = {"term": title_in_url, "media": "music", "country": str(country_code), "entity": "album", "attribute": "albumTerm", "limit": "1"}
-        url_songs_params = {"term": title_in_url + "+" + artist_in_url, "media": "music", "country": str(country_code), "entity": "song"}
+        url_album_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "album", "attribute": "albumTerm", "limit": "1"}
+        url_songs_params = {"term": title_in_url + "+" + artist_in_url, "country": str(country_code), "media": "music", "entity": "song"}
 
 
     url_album_params_string = urllib.parse.urlencode(url_album_params, safe = '+äöü')
@@ -114,7 +112,7 @@ def search_album_applemusic(title="", artist="", country_code = "us"):
 def search_songs_of_artist_applemusic(artist = "", country_code = "us"):
     # replaces every space with + (important for the API to work properly)
     artist_in_url = str(artist).replace(" ", "+") 
-    url_params = {"term": artist_in_url, "media": "music", "country": str(country_code), "entity": "song", "attribute": "artistTerm", "limit": "100"}
+    url_params = {"term": artist_in_url, "country": str(country_code), "media": "music","entity": "song", "attribute": "artistTerm", "limit": "100"}
     url_params_string = urllib.parse.urlencode(url_params, safe='+äöü')
     response = requests.get(url = applemusic_api_search, params = url_params_string)
     results_json = response.json()

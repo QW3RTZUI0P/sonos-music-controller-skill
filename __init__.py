@@ -23,14 +23,10 @@ class SonosMusicController(MycroftSkill):
     # location information
     room = ""
     country_code = ""
-    # radio stations. Can be edited on home.mycroft.ai
-    radio01 = ""
     # value that stores the volume of the Sonos speaker when Mycroft lowers its volume
     volume = "0"
     # helps with the volume increase after Mycroft has been falsely activated
     increase_volume_after_false_activation = False
-    # value that stores whether the Sonos speaker is playing
-    is_sonos_playing = False
 
     # the music service chosen by the user
     # possible values: "spotify" or "apple_music"
@@ -50,12 +46,9 @@ class SonosMusicController(MycroftSkill):
         # get the skill settings
         # the name of the room the Mycroft device is located in (has to be the name of the Sonos speaker)
         SonosMusicController.room = str(DeviceApi().get()["description"])
-        SonosMusicController.radio01 = self.settings.get("radio")
         SonosMusicController.music_service = self.settings.get("service_selection")
-
         SonosMusicController.country_code = str(DeviceApi().get_location()["city"]["state"]["country"]["code"]).lower()
 
-        # initializes soco
         SonosMusicController.initialize_soco()
 
         SonosMusicController.initialize_music_services(self)
@@ -79,6 +72,7 @@ class SonosMusicController(MycroftSkill):
 
     # initialisation methods:
     def initialize_soco():
+        # TODO: add error handling. What happens if the skill for some reason doesn't find any speakers on startup? Maybe continue searching ...
         SonosMusicController.all_speakers = soco.discover()
         for current_speaker in SonosMusicController.all_speakers:
             if current_speaker.player_name == SonosMusicController.room:
@@ -115,6 +109,7 @@ class SonosMusicController(MycroftSkill):
         item = DidlMusicTrack(resources=resources, title=title, parent_id="-1", item_id="-1")
         return item
 
+    # converts the uri used by the Sonos speakers internally to the song id used by the music services
     def convert_to_music_service_id(uri = ""):
         service = SonosMusicController.music_service
         if service == "spotify":
@@ -225,11 +220,12 @@ class SonosMusicController(MycroftSkill):
         if SonosMusicController.music_service != "apple_music":
             self.speak_dialog("not.working.error", {"service": "spotify"})
 
-        # takes the Apple Music Song ID and looks it up on the iTunes Search API to get the required information (because soco often can't give us this information)
         track_info = SonosMusicController.speaker.get_current_track_info()
         title = track_info["title"]
         result_dict = track_info
+        # is executed when the playing song has been started by this skill
         if "x-sonos" in title:
+            # takes the Apple Music Song ID and looks it up on the iTunes Search API to get the required information (because soco often can't give us this information)
             music_service_id = SonosMusicController.convert_to_music_service_id(track_info["uri"])
             # only works for Apple Music
             # TODO: make this compatible with spotify
@@ -316,13 +312,11 @@ class SonosMusicController(MycroftSkill):
                 title = ""
             radio_browser = RadioBrowser()
             radio_search_results = radio_browser.search(name = title, order = "clickcount")
+            # the api returns the search results in exactly the opposite order
             best_result = radio_search_results[-1]
-            # for i in radio_search_results:
-            #     if i["codec"] == "MP3":
-            #         best_result = i
-            #         break
             radio_url = best_result["url_resolved"]
             radio_uri_for_sonos = ""
+            # Sonos speakers need the prefix "x-rincon-mp3radio://" to play Internet radio
             if "https://" in radio_url:
                 radio_uri_for_sonos = radio_url.replace("https://", "x-rincon-mp3radio://") 
             else:
