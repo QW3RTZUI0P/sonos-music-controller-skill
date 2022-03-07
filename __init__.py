@@ -252,7 +252,7 @@ class SonosMusicController(MycroftSkill):
             uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
             SonosMusicController.play_uris([uri])
         # throws an error if no song is found for the search terms
-        except IndexError:
+        except:
             artist = message.data.get("artist")
             if artist == None: 
                 self.speak_dialog("no.song.found", {"title": message.data.get('title')})
@@ -275,7 +275,7 @@ class SonosMusicController(MycroftSkill):
                 final_uris_list.append(SonosMusicController.convert_to_uri(current_id))
             SonosMusicController.play_uris(final_uris_list)
         # throws an error if no albums (no songs in this album) are found for the search terms
-        except IndexError:
+        except:
             artist = message.data.get("artist")
             if artist == None: 
                 self.speak_dialog("no.album.found", {"title": message.data.get('title')})
@@ -298,12 +298,10 @@ class SonosMusicController(MycroftSkill):
                     SonosMusicController.play_uris(final_uris_list)
                     return
         # throws an error if a search for the specified artist on apple music doesn't produce any results
-        except IndexError:
+        except:
            self.speak_dialog("no.music.found", {"artist": message.data.get("artist")})
 
 
-    # not really working at the moment
-    # TODO: implement radio stations
     @intent_handler("play.radio.intent")
     def play_radio(self, message):
         title = message.data.get("title")
@@ -324,7 +322,7 @@ class SonosMusicController(MycroftSkill):
             
             SonosMusicController.speaker.play_uri(uri = radio_uri_for_sonos, title = best_result["name"], force_radio = True)
             self.speak_dialog("playing.radio", {"radio": str(best_result["name"])})
-        except IndexError:
+        except:
             self.speak_dialog("no.radio.found.error", {"radio": title})
 
 
