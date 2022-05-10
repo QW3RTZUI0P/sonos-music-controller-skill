@@ -1,4 +1,4 @@
 (radio | radio station)
 play radio
 radio {title}
-play the (radio | radio station) {title}
+play (the | ) (radio | radio station) {title} in the room {room}

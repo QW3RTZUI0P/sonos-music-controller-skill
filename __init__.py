@@ -35,6 +35,7 @@ class SonosMusicController(MycroftSkill):
 
     # values for the soco package
     all_speakers = []
+    all_speakers_dict = {}
     speaker = None
 
     # values for Spotify
@@ -78,6 +79,10 @@ class SonosMusicController(MycroftSkill):
         counter = 0
         while counter < 5:
             for current_speaker in SonosMusicController.all_speakers:
+                # only executes the below once (first run of the while loop)
+                if counter == 0:
+                    SonosMusicController.all_speakers_dict[current_speaker.player_name.lower()] = current_speaker
+
                 if current_speaker.player_name == SonosMusicController.room:
                     SonosMusicController.speaker = current_speaker
                     return
@@ -138,14 +143,24 @@ class SonosMusicController(MycroftSkill):
     # plays the given uris (most of the time a fancy string that contains some important information)
     # the first uri in the list will be played immediately, all the other ones are being added to the queue
     # uris can either be urls or Sonos intern uris, e.g. x-sonos-http:SOME_ID&SOME_SERVICE_ID&SOME_OTHER_ID
-    def play_uris(uri_list = []):
-        SonosMusicController.clear_queue()
-        for current_uri in uri_list:
-            item = SonosMusicController.convert_to_didl_item(current_uri)
-            SonosMusicController.speaker.add_to_queue(item)
-            if uri_list[0] == current_uri:
-                time.sleep(1)
-                SonosMusicController.speaker.play_from_queue(0)
+    def play_uris(uri_list = [], room = None):
+
+        if room == None:
+            SonosMusicController.clear_queue()
+            for current_uri in uri_list:
+                item = SonosMusicController.convert_to_didl_item(current_uri)
+                SonosMusicController.speaker.add_to_queue(item)
+                if uri_list[0] == current_uri:
+                    time.sleep(1)
+                    SonosMusicController.speaker.play_from_queue(0)
+        else:
+            SonosMusicController.all_speakers_dict[room].clear_queue()
+            for current_uri in uri_list:
+                item = SonosMusicController.convert_to_didl_item(current_uri)
+                SonosMusicController.all_speakers_dict[room].add_to_queue(item)
+                if uri_list[0] == current_uri:
+                    time.sleep(1)
+                    SonosMusicController.all_speakers_dict[room].play_from_queue(0)
 
 
     # functions to automatically lower the volume of the Sonos speaker and to increase it again when Mycroft has finished speaking
@@ -254,14 +269,22 @@ class SonosMusicController(MycroftSkill):
         try:
             result_dict = search_song(title=message.data.get('title'), artist=message.data.get('artist'),
                                       country_code = SonosMusicController.country_code, service = SonosMusicController.music_service, self = self)
-            # logging stuff
-            self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
-            self.speak_dialog("playing.song", {"title": result_dict["trackName"], "artist": result_dict["artistName"]})
 
-            # responsible for playing the actual songs on the Sonos speaker
-            uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
-            SonosMusicController.play_uris([uri])
-        # throws an error if no song is found for the search terms
+            if message.data.get('room') == None:
+                # logging stuff
+                self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]) + " on " + str(SonosMusicController.room))
+                self.speak_dialog("playing.song", {"title": result_dict["trackName"], "artist": result_dict["artistName"]})
+                # responsible for playing the actual songs on the Sonos speaker
+                uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
+                SonosMusicController.play_uris([uri])
+            else:
+                # logging stuff
+                self.log.info("Playing " + str(result_dict["trackName"]) + " by " + str(result_dict["artistName"]) + " on " + str(message.data.get('room')))
+                self.speak_dialog("playing.song.on.room", {"title": result_dict["trackName"], "artist": result_dict["artistName"], "room": message.data.get('room')},)
+                # responsible for playing the actual songs on the Sonos speaker
+                uri = SonosMusicController.convert_to_uri(result_dict["trackId"])
+                SonosMusicController.play_uris([uri], room = message.data.get('room'))
+        # throws an error if no song is found for the search terms (or if anything other happens)
         except:
             artist = message.data.get("artist")
             if artist == None: 

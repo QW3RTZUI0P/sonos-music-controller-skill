@@ -1,3 +1,3 @@
 play ( | the song | the track) {title}
 play the ( | the song | the track) {title} by {artist}
-play the ( | the song | the track) {title} by {artist} (on | in) {room}
+play the ( | the song | the track) {title} by {artist} in the room {room}

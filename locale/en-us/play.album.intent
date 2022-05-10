@@ -1,4 +1,6 @@
 play the (album | collection) {title}
+play the (album | collection) {title} in the room {room}
 play the (album | collection) {title} by {artist}
+play the (album | collection) {title} by {artist} in the room {room}
 play by {artist} the album {title}
-play the album {title} by {artist} (on | in) {room}
+play by {artist} the album {title} in the room {room}

@@ -1,4 +1,4 @@
-(radio | radiosender | radiostation)
-spiele radio
-(radio | radiosender | radiostation) {title}
-spiele (radio | das radio | sender | den sender | radiosender |  den radiosender) {title}
+(spiele | ) (radio | einen radiosender | eine radiostation)
+(spiele | ) (radio | einen radiosender | eine radiostation) im raum {room}
+(spiele | ) ((das | ) radio | (den | ) sender | (den | ) radiosender | (die | ) radiostation) {title}
+(spiele | ) ((das | ) radio | (den | ) sender | (den | ) radiosender | (die | ) radiostation) {title} im raum {room}

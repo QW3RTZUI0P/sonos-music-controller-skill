@@ -1,5 +1,4 @@
 musik von {artist}
-spiele musik von {artist}
-spiele etwas von {artist}
-spiele lieder von {artist}
-spiele songs von {artist}
+musik von {artist} im raum {room}
+spiele (musik | etwas | lieder | songs) von {artist}
+spiele (musik | etwas | lieder | songs) von {artist} im raum {room}

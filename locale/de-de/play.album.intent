@@ -1,4 +1,6 @@
 spiele das album {title}
+spiele das album {title} im raum {room}
 spiele das album {title} von {artist}
+spiele das album {title} von {artist} im raum {room}
 spiele von {artist} das album {title}
-spiele das album {title} von {artist} (auf | in) (der | dem | ) {room}
+spiele von {artist} das album {title} im raum {room} 

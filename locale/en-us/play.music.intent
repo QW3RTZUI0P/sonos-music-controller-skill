@@ -1,2 +1,2 @@
-music by {artist}
-play (music | something | songs) by {artist}
+(play | ) (music | something | songs) by {artist}
+(play | ) (music | something | songs) by {artist} in the room {room}
