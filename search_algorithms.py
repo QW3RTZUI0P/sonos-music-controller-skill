@@ -40,7 +40,7 @@ def lookup_id_applemusic(music_service_id = "", country_code = "us"):
 # function for searching a song on Apple Music
 # returns a dict with the trackId, the trackName and the artistName
 def search_song_applemusic(title="", artist="", country_code = "us", self = None):
-    # replaces every space with + (important for the API to work properly)
+    # replaces every space with "+"" (important for the API to work properly)
     title_in_url = str(title).replace(" ", "+")
     artist_in_url = str(artist).replace(" ", "+")
     title_and_artist = title_in_url + "+" + artist_in_url
@@ -49,7 +49,7 @@ def search_song_applemusic(title="", artist="", country_code = "us", self = None
     if artist == None:
         url_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "song", "attribute": "songTerm",  "limit":"10"}
     else:
-        url_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "song", "attribute": "songTerm", "limit": "10"}
+        url_params = {"term": title_and_artist, "country": str(country_code), "media": "music", "entity": "song", "limit": "10"}
 
     url_params_string = urllib.parse.urlencode(url_params, safe='+äöü')
     response = requests.get(url = applemusic_api_search, params = url_params_string)
@@ -77,6 +77,7 @@ def search_album_applemusic(title="", artist="", country_code = "us"):
     # replaces every space with + (important for the API to work properly)
     title_in_url = str(title).replace(" ", "+")
     artist_in_url = str(artist).replace(" ", "+")
+    title_and_artist = title_in_url + "+" + artist_in_url
 
     url_album = ""
     url_songs = ""
@@ -84,11 +85,11 @@ def search_album_applemusic(title="", artist="", country_code = "us"):
     url_songs_params = {}
     if artist == None:
         url_album_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "album", "attribute": "albumTerm", "limit": 1}
-        url_songs_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "song"}
+        url_songs_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "song", "attribute": "albumTerm"}
 
     else: 
-        url_album_params = {"term": title_in_url, "country": str(country_code), "media": "music", "entity": "album", "attribute": "albumTerm", "limit": "1"}
-        url_songs_params = {"term": title_in_url + "+" + artist_in_url, "country": str(country_code), "media": "music", "entity": "song"}
+        url_album_params = {"term": title_and_artist, "country": str(country_code), "media": "music", "entity": "album", "attribute": "albumTerm", "limit": "1"}
+        url_songs_params = {"term": title_and_artist, "country": str(country_code), "media": "music", "entity": "song", "attribute": "albumTerm"}
 
 
     url_album_params_string = urllib.parse.urlencode(url_album_params, safe = '+äöü')
@@ -203,7 +204,7 @@ def search_album_spotify(title = "", artist = "", country_code = ""):
     token = get_spotify_access_token()
     headers = {"Authorization": "Bearer " + token}
 
-    response = requests.get(url = spotify_api_url, params = params, headers = headers)
+    response = requests.get(url = spotify_api_url, params = url_params, headers = headers)
     json = response.json()
     results = json.get("tracks").get("items")
     first_result = results[0]

@@ -3,12 +3,13 @@ from mycroft import MycroftSkill, intent_handler
 from mycroft.api import DeviceApi
 # used to make breaks in the code
 import time
-import random
 # used to control the Sonos speakers
 import soco
 from soco.data_structures import *
 # used for internet radio
 from pyradios import RadioBrowser
+# used to shutdown this skill itself
+from mycroft.messagebus import Message
 
 
 # contains all the necessary search algorithms to search for music on the various services
@@ -49,7 +50,7 @@ class SonosMusicController(MycroftSkill):
         SonosMusicController.music_service = self.settings.get("service_selection")
         SonosMusicController.country_code = str(DeviceApi().get_location()["city"]["state"]["country"]["code"]).lower()
 
-        SonosMusicController.initialize_soco()
+        SonosMusicController.initialize_soco(self)
 
         SonosMusicController.initialize_music_services(self)
 
@@ -71,13 +72,22 @@ class SonosMusicController(MycroftSkill):
 
 
     # initialisation methods:
-    def initialize_soco():
+    def initialize_soco(self):
         # TODO: add error handling. What happens if the skill for some reason doesn't find any speakers on startup? Maybe continue searching ...
         SonosMusicController.all_speakers = soco.discover()
-        for current_speaker in SonosMusicController.all_speakers:
-            if current_speaker.player_name == SonosMusicController.room:
-                SonosMusicController.speaker = current_speaker
-                # TODO: add default value for speaker here or do something different (e.g. speaker not found dialog)
+        counter = 0
+        while counter < 5:
+            for current_speaker in SonosMusicController.all_speakers:
+                if current_speaker.player_name == SonosMusicController.room:
+                    SonosMusicController.speaker = current_speaker
+                    return
+                    # TODO: add default value for speaker here or do something different (e.g. speaker not found dialog)
+            time.sleep(6)
+            counter = counter + 1
+
+        self.speak_dialog("room.not.found.error", {"room": SonosMusicController.room})
+        # make Mycroft shudown itself:
+        # self.bus.emit(Message('mycroft.skills.shutdown',{"id": "sonos-music-controller-skill.qw3rtzui0p","folder": "/opt/mycroft/skills/sonos-music-controller-skill.qw3rtzui0p"}))
     
     def initialize_music_services(self):
         if SonosMusicController.music_service == None or SonosMusicController.music_service == "":
